@@ -1,13 +1,39 @@
+version: '3.8'
+
 services:
-  iotdevicemanager.server:
-    image: ${DOCKER_REGISTRY-}iotdevicemanagerserver
-    build:
-      context: .
-      dockerfile: IoTDeviceManager.server/Dockerfile
+    db:
+        image: "mcr.microsoft.com/mssql/server:2022-latest"
+        environment:
+            SA_PASSWORD: ${DatabasePassword}}
+            ACCEPT_EULA: "Y"
+        ports:
+            - "1433:1433"
+        networks:
+            - app_network
+
+    iotdevicemanager.server:
+        image: ${DOCKER_REGISTRY-}iotdevicemanagerserver
+        build:
+            context: .
+            dockerfile: IoTDeviceManager.server/Dockerfile
+        depends_on:
+            - db
+        command: sh -c "dotnet ef database update --no-build && dotnet IoTDeviceManager.server.dll"
+        networks:
+            - app_network
   
-  iotdevicemanager.client:
-    build:
-      context: ./IoTDeviceManager.client
-      dockerfile: Dockerfile
-    ports:
-        - "53121:53121"
+    iotdevicemanager.client:
+        image: ${DOCKER_REGISTRY-}iotdevicemanagerclient
+        build:
+            context: ./IoTDeviceManager.client
+            dockerfile: Dockerfile
+        ports:
+            - "53122:53121"
+        depends_on:
+            - iotdevicemanager.server
+        networks:
+            - app_network
+
+networks:
+  app_network:
+    driver: bridge

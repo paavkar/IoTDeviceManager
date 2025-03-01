@@ -1,0 +1,4 @@
+```mermaid
+classDiagram
+IdentityUser <|-- ApplicationUser
+```
