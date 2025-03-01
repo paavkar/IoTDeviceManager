@@ -1,0 +1,13 @@
+services:
+  iotdevicemanager.server:
+    image: ${DOCKER_REGISTRY-}iotdevicemanagerserver
+    build:
+      context: .
+      dockerfile: IoTDeviceManager.server/Dockerfile
+  
+  iotdevicemanager.client:
+    build:
+      context: ./IoTDeviceManager.client
+      dockerfile: Dockerfile
+    ports:
+        - "53121:53121"

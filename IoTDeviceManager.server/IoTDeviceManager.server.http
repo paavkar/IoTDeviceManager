@@ -1,0 +1,6 @@
+@IoTDeviceManager.server_HostAddress = http://localhost:5089
+
+GET {{IoTDeviceManager.server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
