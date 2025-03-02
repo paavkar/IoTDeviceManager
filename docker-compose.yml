@@ -4,10 +4,12 @@ services:
     db:
         image: "mcr.microsoft.com/mssql/server:2022-latest"
         environment:
-            SA_PASSWORD: ${DatabasePassword}}
+            SA_PASSWORD: ${DatabasePassword}
             ACCEPT_EULA: "Y"
         ports:
-            - "1433:1433"
+            - "5433:1433"
+        volumes:
+            - db_data:/var/opt/mssql
         networks:
             - app_network
 
@@ -18,7 +20,7 @@ services:
             dockerfile: IoTDeviceManager.server/Dockerfile
         depends_on:
             - db
-        command: sh -c "dotnet ef database update --no-build && dotnet IoTDeviceManager.server.dll"
+        command: sh -c "dotnet IoTDeviceManager.server.dll"
         networks:
             - app_network
   
@@ -37,3 +39,6 @@ services:
 networks:
   app_network:
     driver: bridge
+
+volumes:
+  db_data:
