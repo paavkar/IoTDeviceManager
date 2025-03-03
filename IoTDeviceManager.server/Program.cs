@@ -51,23 +51,47 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
 });
 
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    // Password settings.
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 1;
+
+    // Lockout settings.
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // User settings.
+    options.User.AllowedUserNameCharacters =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+    options.User.RequireUniqueEmail = true;
+});
+
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Apply migrations
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
-    var services = scope.ServiceProvider;
-    try
+    // Apply migrations
+    using (var scope = app.Services.CreateScope())
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        context.Database.Migrate(); // Apply any pending migrations
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            context.Database.Migrate(); // Apply any pending migrations
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while migrating the database.");
+        }
     }
 }
 
