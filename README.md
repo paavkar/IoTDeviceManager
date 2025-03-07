@@ -73,7 +73,10 @@ stateDiagram-v2
     state loggedInState <<choice>>
     state loginSuccessfulState <<choice>>
     state registeredState <<choice>>
-    state registereSuccessfulState <<choice>>
+    state registerSuccessfulState <<choice>>
+    state creationSuccessfulState <<choice>>
+    state deviceRegisterSuccessfulState <<choice>>
+    state deviceExistsState <<choice>>
 
     [*] --> /
     / --> loggedInState : is user logged in
@@ -85,11 +88,29 @@ stateDiagram-v2
 
     /login --> registeredState : is user registered
     registeredState --> /register : user is not registered
-    /register --> registereSuccessfulState : is register successful
-    registereSuccessfulState --> /login : user registered account successfully
-    registereSuccessfulState --> /register : register is unsuccessful (error is displayed)
+    /register --> registerSuccessfulState : is register successful
+    registerSuccessfulState --> /login : user registered account successfully
+    registerSuccessfulState --> /register : register is unsuccessful (error is displayed)
 
     state LoggedIn {
+        AddDevice: AddDevice (dialog)
+        RegisterExistingDevice: RegisterExistingDevice (dialog)
+        CreateNewDevice: CreateNewDevice (dialog)
+
         [*] --> /home
+        /home --> /devices
+        /devices --> AddDevice
+        AddDevice --> deviceExistsState : does device (serial number) already exist
+        deviceExistsState --> CreateNewDevice : does not exist
+        CreateNewDevice --> creationSuccessfulState : was device (serial number created)
+        creationSuccessfulState --> /devices : creation is successful
+        creationSuccessfulState --> CreateNewDevice : there was an error (display it)
+        
+        deviceExistsState --> RegisterExistingDevice : exists
+        RegisterExistingDevice --> deviceRegisterSuccessfulState : is device registration successful
+        deviceRegisterSuccessfulState --> /devices : registration is successful
+        deviceRegisterSuccessfulState --> RegisterExistingDevice : there was an error (display it)
+
+        /devices --> /[id]
     }
 ```

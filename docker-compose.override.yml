@@ -1,7 +1,12 @@
 services:
-  iotdevicemanager.server:
+  webapi:
+    image: ${DOCKER_REGISTRY-}iotdevicemanagerserver
+    build:
+        context: .
+        dockerfile: IoTDeviceManager.server/Dockerfile
+    command: sh -c "dotnet IoTDeviceManager.server.dll"
     environment:
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_DEV}
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
@@ -13,3 +18,22 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  react_frontend:
+      image: ${DOCKER_REGISTRY-}iotdevicemanagerclient
+      build:
+          context: ./IoTDeviceManager.client
+          dockerfile: Dockerfile
+
+  angular_frontend:
+      image: ${DOCKER_REGISTRY-}iotdevicemanagerangularclient
+      build:
+          context: ./IoTDeviceManager.angularClient
+          dockerfile: Dockerfile
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  db_data:

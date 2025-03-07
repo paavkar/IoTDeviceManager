@@ -7,46 +7,45 @@ services:
             SA_PASSWORD: ${DatabasePassword}
             ACCEPT_EULA: "Y"
         ports:
-            - "5433:1433"
+            - "1433:1433"
         volumes:
             - db_data:/var/opt/mssql
         networks:
             - app_network
 
-    iotdevicemanager.server:
-        image: ${DOCKER_REGISTRY-}iotdevicemanagerserver
-        build:
-            context: .
-            dockerfile: IoTDeviceManager.server/Dockerfile
+    webapi:
         depends_on:
             - db
-        command: sh -c "dotnet IoTDeviceManager.server.dll"
         networks:
             - app_network
   
-    iotdevicemanager.client:
-        image: ${DOCKER_REGISTRY-}iotdevicemanagerclient
-        build:
-            context: ./IoTDeviceManager.client
-            dockerfile: Dockerfile
-        ports:
-            - "53122:53121"
+    react_frontend:
         depends_on:
-            - iotdevicemanager.server
+            - webapi
+        ports:
+            - "53122:80"
         networks:
             - app_network
 
-    iotdevicemanager.angularClient:
-        image: ${DOCKER_REGISTRY-}iotdevicemanagerangularclient
-        build:
-            context: ./IoTDeviceManager.angularClient
-            dockerfile: Dockerfile
-        ports:
-            - "63217:63216"
+    angular_frontend:
         depends_on:
-            - iotdevicemanager.server
+            - webapi
+        ports:
+            - "63217:80"
         networks:
             - app_network
+
+    nginx_proxy:
+        build:
+            context: ./nginx-proxy
+            dockerfile: Dockerfile
+        ports:
+            - "80:80"
+        networks:
+            - app_network
+        depends_on:
+            - react_frontend
+            - angular_frontend
 
 networks:
   app_network:

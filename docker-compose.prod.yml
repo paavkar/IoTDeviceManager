@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - db_data:/var/opt/mssql
+    networks:
+      - app_network
+
+  webapi:
+    image: myacr.azurecr.io/idm-webapi:latest
+    environment:
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+      - ASPNETCORE_ENVIRONMENT=Production
+    command: sh -c "dotnet IoTDeviceManager.server.dll"
+  
+  react_frontend:
+    image: myacr.azurecr.io/idm-react-frontend:latest
+
+  angular_frontend:
+    image: myacr.azurecr.io/idm-angular-frontend:latest
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  db_data:
