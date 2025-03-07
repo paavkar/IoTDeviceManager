@@ -52,7 +52,19 @@ namespace IoTDeviceManager.server.Controllers
 
                 var userRoles = (await userManager.GetRolesAsync(user)).ToList();
                 var token = GenerateJwtToken(user, userRoles!);
-                return Ok(new { Token = token });
+
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.Now.AddHours(3),
+                    Path = "/"
+                };
+
+                Response.Cookies.Append("auth_token", token, cookieOptions);
+
+                return Ok(new { Message = "Login was successful" });
             }
             return BadRequest("Invalid login attempt");
         }
