@@ -50,22 +50,28 @@ namespace IoTDeviceManager.server.Controllers
                 if (user == null)
                     return BadRequest("Invalid login attempt");
 
-                var userRole = (await userManager.GetRolesAsync(user)).FirstOrDefault();
-                var token = GenerateJwtToken(user, userRole!);
+                var userRoles = (await userManager.GetRolesAsync(user)).ToList();
+                var token = GenerateJwtToken(user, userRoles!);
                 return Ok(new { Token = token });
             }
             return BadRequest("Invalid login attempt");
         }
 
-        private string GenerateJwtToken(ApplicationUser user, string userRole)
+        private string GenerateJwtToken(ApplicationUser user, List<string> userRoles)
         {
             var claims = new List<Claim>
             {
                 new("id", user.Id),
                 new("username", user.UserName!),
                 new("email", user.Email!),
-                new("role", userRole)
             };
+
+            int i = 0;
+            foreach (var role in userRoles)
+            {
+                claims.Add(new($"role{i}", role));
+                i++;
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
