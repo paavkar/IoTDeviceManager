@@ -4,7 +4,7 @@ services:
     build:
         context: .
         dockerfile: IoTDeviceManager.server/Dockerfile
-    command: sh -c "dotnet IoTDeviceManager.server.dll"
+    command: sh -c "dotnet ef database update && dotnet IoTDeviceManager.server.dll"
     environment:
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_DEV}
       - ASPNETCORE_ENVIRONMENT=Development
