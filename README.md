@@ -41,6 +41,15 @@ class IdentityUser {
 
 class ApplicationUser
 
+class RefreshToken {
+    +String Id
+    +String Token
+    +DateTimeOffset Expires
+    +DateTimeOffset CreatedAt
+    +bool Revoked
+    +String UserId
+}
+
 class Device {
     +String Id
     +bool IsOnline

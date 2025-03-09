@@ -1,4 +1,4 @@
-﻿namespace IoTDeviceManager.server.Models
+﻿namespace IoTDeviceManager.server.Models.Auth
 {
     public class RegisterModel
     {

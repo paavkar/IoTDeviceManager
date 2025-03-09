@@ -1,14 +1,17 @@
 using IoTDeviceManager.server.Data;
-using IoTDeviceManager.server.Models.Identity;
+using IoTDeviceManager.server.Models.Auth;
+using IoTDeviceManager.server.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-var builder = WebApplication.CreateBuilder(args);
-var configuration = builder.Configuration;
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+ConfigurationManager configuration = builder.Configuration;
 
 // Add services to the container.
 
@@ -42,7 +45,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = configuration["Jwt:Issuer"],
         ValidAudience = configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))
     };
 });
 
@@ -74,24 +77,24 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 builder.Services.AddControllers();
 
-var app = builder.Build();
+builder.Services.AddScoped<TokenService>();
+
+WebApplication app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     // Apply migrations
-    using (var scope = app.Services.CreateScope())
+    using IServiceScope scope = app.Services.CreateScope();
+    IServiceProvider services = scope.ServiceProvider;
+    try
     {
-        var services = scope.ServiceProvider;
-        try
-        {
-            var context = services.GetRequiredService<ApplicationDbContext>();
-            context.Database.Migrate(); // Apply any pending migrations
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while migrating the database.");
-        }
+        ApplicationDbContext context = services.GetRequiredService<ApplicationDbContext>();
+        context.Database.Migrate(); // Apply any pending migrations
+    }
+    catch (Exception ex)
+    {
+        ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
     }
 }
 
