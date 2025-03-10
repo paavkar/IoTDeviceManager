@@ -18,9 +18,10 @@ ConfigurationManager configuration = builder.Configuration;
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost",
-        builder => builder.WithOrigins("https://localhost:53121", "https://localhost:53122")
+        builder => builder.WithOrigins("https://localhost", "http://localhost")
                           .AllowAnyHeader()
-                          .AllowAnyMethod());
+                          .AllowAnyMethod()
+                          .AllowCredentials());
 });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

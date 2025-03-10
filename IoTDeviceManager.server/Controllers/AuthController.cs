@@ -36,7 +36,7 @@ namespace IoTDeviceManager.server.Controllers
                 return Ok(new { Username = user.UserName, user.Email });
             }
 
-            return BadRequest(result.Errors);
+            return BadRequest(new { Errors = result.Errors });
         }
 
         [HttpPost("login")]
@@ -44,21 +44,23 @@ namespace IoTDeviceManager.server.Controllers
         {
             ApplicationUser? user;
 
-            if (!string.IsNullOrEmpty(model.Username))
-                user = await userManager.FindByNameAsync(model.Username);
-            else if (!string.IsNullOrEmpty(model.Email))
-                user = await userManager.FindByEmailAsync(model.Email);
+            if (!string.IsNullOrEmpty(model.EmailOrUsername))
+            {
+                user = model.EmailOrUsername.Contains('@')
+                    ? await userManager.FindByEmailAsync(model.EmailOrUsername)
+                    : await userManager.FindByNameAsync(model.EmailOrUsername);
+            }
             else
-                return BadRequest("Username or email is required.");
+                return BadRequest(new { Message = "Username or email is required." });
 
             if (user is null)
-                return BadRequest("There was an error with sign-in.");
+                return BadRequest(new { Message = "There was an error with sign-in." });
 
             Microsoft.AspNetCore.Identity.SignInResult result = await signInManager.PasswordSignInAsync(user, model.Password, false, false);
             if (result.Succeeded)
             {
                 if (user == null)
-                    return BadRequest("Invalid login attempt");
+                    return BadRequest(new { Message = "Invalid login attempt" });
 
                 TokenResponse token = await tokenService.GenerateTokensAsync(user);
 
@@ -79,7 +81,7 @@ namespace IoTDeviceManager.server.Controllers
                 return Ok(new { Message = "Login was successful", User = user });
             }
 
-            return BadRequest("Invalid login attempt");
+            return BadRequest(new { Message = "Invalid login attempt" });
         }
 
         [HttpPost("refresh")]
@@ -89,21 +91,21 @@ namespace IoTDeviceManager.server.Controllers
             var refreshToken = Request.Cookies["refresh_token"];
 
             if (string.IsNullOrEmpty(accessToken) && string.IsNullOrEmpty(refreshToken))
-                return Unauthorized("Missing tokens.");
+                return Unauthorized(new { Message = "Missing tokens." });
 
             if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized("Missing refresh token.");
+                return Unauthorized(new { Message = "Missing refresh token." });
 
             RefreshToken? rf = await tokenService.GetRefreshTokenAsync(refreshToken);
 
             if (rf is null)
-                return Unauthorized("Invalid refresh token.");
+                return Unauthorized(new { Message = "Invalid refresh token." });
 
             if (rf.Revoked)
-                return Unauthorized("Refresh token has been revoked.");
+                return Unauthorized(new { Message = "Refresh token has been revoked." });
 
             if (rf.Expires < DateTimeOffset.Now)
-                return Unauthorized("Refresh token has expired.");
+                return Unauthorized(new { Message = "Refresh token has expired." });
 
             var userId = rf.UserId;
 
@@ -111,17 +113,17 @@ namespace IoTDeviceManager.server.Controllers
             {
                 ClaimsPrincipal principal = tokenService.GetPrincipalFromExpiredToken(accessToken);
                 if (principal is null)
-                    return Unauthorized("Invalid access token.");
+                    return Unauthorized(new { Message = "Invalid access token." });
 
                 userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
             }
 
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("Invalid access token.");
+                return Unauthorized(new { Message = "Invalid access token." });
 
             var isRefreshValid = await tokenService.ValidateRefreshTokenAsync(userId, refreshToken);
             if (!isRefreshValid)
-                return Unauthorized("Invalid refresh token.");
+                return Unauthorized(new { Message = "Invalid refresh token." });
 
             ApplicationUser? user = await userManager.FindByIdAsync(userId);
             TokenResponse newTokens = await tokenService.GenerateTokensAsync(user!);
@@ -130,7 +132,7 @@ namespace IoTDeviceManager.server.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.Now.AddHours(3),
                 Path = "/"
             };
@@ -177,19 +179,19 @@ namespace IoTDeviceManager.server.Controllers
         {
             var accessToken = Request.Cookies["auth_token"];
             if (string.IsNullOrEmpty(accessToken))
-                return Unauthorized("Missing access token.");
+                return Unauthorized(new { Message = "Missing access token." });
 
             ClaimsPrincipal principal = tokenService.GetPrincipalFromExpiredToken(accessToken);
 
             if (principal is null)
-                return Unauthorized("Invalid access token.");
+                return Unauthorized(new { Message = "Invalid access token." });
 
             var userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("Invalid access token.");
+                return Unauthorized(new { Message = "Invalid access token." });
 
             ApplicationUser? user = await userManager.FindByIdAsync(userId);
-            return user is null ? Unauthorized("No user found.") : Ok(user);
+            return user is null ? NotFound(new { Message = "No user found." }) : Ok(user);
         }
     }
 }
