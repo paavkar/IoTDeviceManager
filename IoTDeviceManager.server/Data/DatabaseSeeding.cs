@@ -1,4 +1,4 @@
-﻿using IoTDeviceManager.server.Models.Identity;
+﻿using IoTDeviceManager.server.Models.Auth;
 using Microsoft.AspNetCore.Identity;
 
 namespace IoTDeviceManager.server.Data
@@ -7,8 +7,8 @@ namespace IoTDeviceManager.server.Data
     {
         async Task SeedDatabaseAsync(IServiceProvider services)
         {
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+            RoleManager<IdentityRole> roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            UserManager<ApplicationUser> userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
             // Seed roles
             var roles = new[] { "Admin", "User" };
