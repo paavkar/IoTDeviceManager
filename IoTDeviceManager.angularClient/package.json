@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --host=127.0.0.1",
-    "build": "ng build IoTDeviceManager.angularClient --configuration production",
+    "build": "ng build IoTDeviceManager.angularClient --configuration production --base-href /angular/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

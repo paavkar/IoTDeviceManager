@@ -1,33 +1,69 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'
+import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+import { SignIn } from './pages/login';
+import { Register } from './pages/register';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isAuth, setIsAuth] = useState(false)
+
+  function RedirectToAngular() {
+    useEffect(() => {
+      window.location.href = '/angular/';
+    }, []);
+  
+    return null;
+  }
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/Auth/me', {
+          credentials: 'include',
+        });
+      
+        if (response.ok) {
+          //const userData = await response.json();
+          setIsAuth(true)
+          window.location.href = '/angular/';
+        } else {
+          //const error = await response.json();
+          setIsAuth(false)
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    }
+
+    fetchUserProfile()
+  }, [])
+
+  const router = createBrowserRouter([
+    {
+        path: '/',
+        element: isAuth ? <RedirectToAngular /> : <SignIn />,
+    },
+    {
+        path: '/react',
+        element: isAuth ? <RedirectToAngular /> : <SignIn />,
+    },
+    {
+        path:'/login',
+        element: isAuth ? <Navigate to="/" /> : <SignIn />
+    },
+    {
+        path:'/register',
+        element: isAuth ? <Navigate to="/" /> : <Register />
+    },
+    // {
+    //     path: '/profile/:userName',
+    //     element: <ProfilePage />
+    // },
+  ])
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <RouterProvider router={router} />
     </>
   )
 }
