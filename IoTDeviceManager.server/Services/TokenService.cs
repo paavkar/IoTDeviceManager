@@ -25,11 +25,9 @@ namespace IoTDeviceManager.server.Services
                     new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             ];
 
-            var i = 1;
             foreach (var role in (await userManager.GetRolesAsync(user)).ToList())
             {
-                claims.Add(new($"role{i}", role));
-                i++;
+                claims.Add(new($"role", role));
             }
 
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
@@ -121,5 +119,45 @@ namespace IoTDeviceManager.server.Services
         }
 
         public async Task<RefreshToken?> GetRefreshTokenAsync(string refreshToken) => await context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+
+        public async Task<dynamic> ValidateTokensAsync(string accessToken, string refreshToken)
+        {
+            if (string.IsNullOrEmpty(accessToken) && string.IsNullOrEmpty(refreshToken))
+                return new { Message = "Missing tokens.", Success = false };
+
+            if (string.IsNullOrEmpty(refreshToken))
+                return new { Message = "Missing refresh token.", Success = false };
+
+            RefreshToken? rf = await GetRefreshTokenAsync(refreshToken);
+
+            if (rf is null)
+                return new { Message = "Invalid refresh token.", Success = false };
+
+            if (rf.Revoked)
+                return new { Message = "Refresh token has been revoked.", Success = false };
+
+            if (rf.Expires < DateTimeOffset.Now)
+                return new { Message = "Refresh token has expired.", Success = false };
+
+            var userId = rf.UserId;
+
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                ClaimsPrincipal principal = GetPrincipalFromExpiredToken(accessToken);
+                if (principal is null)
+                    return new { Message = "Invalid access token.", Success = false };
+
+                userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            }
+
+            if (string.IsNullOrEmpty(userId))
+                return new { Message = "Invalid access token.", Success = false };
+
+            var isRefreshValid = await ValidateRefreshTokenAsync(userId, refreshToken);
+            if (!isRefreshValid)
+                return new { Message = "Invalid refresh token.", Success = false };
+
+            return new { UserId = userId, Success = true };
+        }
     }
 }

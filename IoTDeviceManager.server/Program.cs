@@ -79,6 +79,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<IDeviceService, DeviceService>();
 
 WebApplication app = builder.Build();
 
