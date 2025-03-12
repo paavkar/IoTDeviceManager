@@ -10,6 +10,6 @@
         public string? UserId { get; set; }
 
         // Not saved on database
-        public List<Sensor> Sensors { get; set; }
+        public List<Sensor>? Sensors { get; set; }
     }
 }

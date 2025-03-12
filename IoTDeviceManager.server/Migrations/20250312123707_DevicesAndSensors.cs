@@ -18,7 +18,7 @@ namespace IoTDeviceManager.server.Migrations
                     IsOnline = table.Column<bool>(type: "bit", nullable: false),
                     LastConnectionTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SerialNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
@@ -44,7 +44,7 @@ namespace IoTDeviceManager.server.Migrations
                     Unit = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LatestReading = table.Column<double>(type: "float", nullable: false),
-                    DeviceSerialNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DeviceSerialNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
                 },
                 constraints: table =>
                 {
