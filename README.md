@@ -66,6 +66,7 @@ class Sensor {
     +bool IsOnline
     +DateTimeOffset? LastConnectionTime
     +String MeasurementType
+    +String Unit
     +String? Name
 
     +String DeviceSerialNumber

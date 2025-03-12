@@ -25,11 +25,9 @@ namespace IoTDeviceManager.server.Services
                     new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             ];
 
-            var i = 1;
             foreach (var role in (await userManager.GetRolesAsync(user)).ToList())
             {
-                claims.Add(new($"role{i}", role));
-                i++;
+                claims.Add(new($"role", role));
             }
 
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
