@@ -21,7 +21,7 @@ namespace IoTDeviceManager.server.Controllers
             if (!result.Success)
                 return Unauthorized(new { Message = result.Message });
 
-            dynamic userId = result.UserId;
+            string userId = result.UserId;
 
             ApplicationUser? user = await userManager.FindByIdAsync(userId);
             TokenResponse newTokens = await tokenService.GenerateTokensAsync(user!);
