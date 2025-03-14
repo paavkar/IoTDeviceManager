@@ -3,6 +3,12 @@ import { MenuItem } from 'primeng/api';
 import { Title } from '@angular/platform-browser';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { filter, map, mergeMap } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+
+import { User } from '../types';
+import * as UserSelector from './state/user.selector';
+import * as UserActions from './state/user.actions';
 
 @Component({
   selector: 'app-root',
@@ -15,8 +21,12 @@ export class AppComponent implements OnInit {
   constructor(
     private titleService: Title,
     private router: Router,
-    private activatedRoute: ActivatedRoute
-  ) {}
+    private activatedRoute: ActivatedRoute,
+    private store: Store
+  ) {
+    this.user$ = store.select(UserSelector.selectCurrentUser)
+  }
+  user$: Observable<User | null>;
   tile = 'IDM';
   year = new Date().getFullYear();
   menuItems: MenuItem[] | undefined;
@@ -40,6 +50,10 @@ export class AppComponent implements OnInit {
     this.menuItems = [
       { label: 'Devices', routerLink: '/devices', icon: 'pi pi-home' }
     ]
+
+    // if (this.user$ == null) {
+    //   this.store.dispatch(UserActions.loadUser())
+    // }
   }
 
   toggleDarkMode() {
