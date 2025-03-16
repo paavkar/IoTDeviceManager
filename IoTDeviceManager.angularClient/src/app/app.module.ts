@@ -1,20 +1,33 @@
 import { NgModule, ApplicationConfig } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { StoreModule } from '@ngrx/store';
+import { StoreModule, MetaReducer } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
+import { localStorageSync } from 'ngrx-store-localstorage';
+
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { providePrimeNG } from 'primeng/config';
+import Aura from '@primeng/themes/aura';
 
 import { userReducer } from './state/user.reducer';
 import { devicesReducer } from './state/devices.reducer'
 import { DataEffects } from './state/data.effects';
 
-import { Menubar, MenubarModule } from 'primeng/menubar';
-import { PanelModule } from 'primeng/panel';
-import { ButtonModule } from 'primeng/button';
+import { ImportsModule } from './imports';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { DevicesComponent } from './pages/devices/devices.component';
+import { provideHttpClient } from '@angular/common/http';
+
+export function localStorageSyncReducer(reducer: any): any {
+  return localStorageSync({
+    keys: ['user', 'devices'],
+    rehydrate: true,
+  })(reducer);
+}
+
+export const metaReducers: MetaReducer<any>[] = [localStorageSyncReducer];
 
 @NgModule({
   declarations: [
@@ -25,16 +38,27 @@ import { DevicesComponent } from './pages/devices/devices.component';
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
-    PanelModule,
-    ButtonModule,
-    Menubar,
+    ImportsModule,
     StoreModule.forRoot({
       user: userReducer,
       devices: devicesReducer
-    }),
-    EffectsModule.forRoot([DataEffects])
+    }, { metaReducers }),
+    //EffectsModule.forRoot([DataEffects])
   ],
-  providers: [ ],
+  providers: [
+    provideHttpClient(),
+    provideAnimationsAsync(),
+    providePrimeNG({
+        theme: {
+            preset: Aura,
+            options: {
+                darkModeSelector: '.idm-dark',
+                name: 'primeng',
+                order: 'theme, base, primeng'
+            }
+        }
+    })
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

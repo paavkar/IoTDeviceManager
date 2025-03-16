@@ -1,19 +1,4 @@
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * Delete the template below * * * * * * * * * -->
-<!-- * * * * * * * to get started with your project! * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-
 <style>
-  .footer {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-between;
-  }
 
   @media screen and (max-width: 650px) {
     .content {
@@ -30,7 +15,7 @@
   }
 </style>
 <div class="min-h-screen flex flex-col">
-  <p-menubar class="flex h-14 pl-10 items-center space-x-2 bg-gray-800 text-white" [model]="menuItems"></p-menubar>
+  <p-menubar class="flex h-14 pl-10 items-center space-x-2 bg-gray-800" [model]="menuItems"></p-menubar>
   
   <div class="flex-grow">
     <router-outlet></router-outlet>
@@ -39,7 +24,7 @@
   <footer class="bg-gray-800 text-white py-4">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2">
-        <span>©{{ year }} IDM</span>
+        <span>©{{ year }} IDM Paavo Karppinen</span>
       </div>
 
       <div class="flex items-center space-x-2">

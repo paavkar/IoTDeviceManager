@@ -1,14 +1,20 @@
 // state/data.effects.ts
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import { mergeMap, map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { Store } from '@ngrx/store';
+
 import * as UserActions from './user.actions';
 import * as DevicesActions from './devices.actions';
 import { DataService } from '../services/data.service';
-import { mergeMap, map, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { AppState } from './app.state';
 
 @Injectable()
 export class DataEffects {
+
+  constructor(private actions$: Actions, private dataService: DataService) {}
+
   loadDevices$ = createEffect(() =>
     this.actions$.pipe(
       ofType(DevicesActions.loadDevices),
@@ -36,6 +42,4 @@ export class DataEffects {
       )
     )
   );
-
-  constructor(private actions$: Actions, private dataService: DataService) {}
 }
