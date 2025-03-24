@@ -12,7 +12,7 @@ export class DataService {
   constructor(private http: HttpClient) {}
 
   fetchDevices(): Observable<Device[]> {
-    return this.http.get<Device[]>(this.devicesEndpoint, { withCredentials: true });
+    return this.http.get<Device[]>(`${this.devicesEndpoint}/`, { withCredentials: true });
   }
 
   fetchUser(): Observable<User> {
@@ -20,6 +20,6 @@ export class DataService {
   }
 
   postDevice(device: Device): Observable<Device> {
-    return this.http.post<Device>(`${this.devicesEndpoint}`, device, { withCredentials: true });
+    return this.http.post<Device>(`${this.devicesEndpoint}/create`, device, { withCredentials: true });
   }
 }

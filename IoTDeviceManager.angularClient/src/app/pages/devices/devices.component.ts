@@ -44,6 +44,7 @@ export class DevicesComponent implements OnInit {
     }
 
     this.store.dispatch(DevicesActions.addDevice({ device }));
+    this.newDeviceName = "";
 
     this.visible = false;
   }

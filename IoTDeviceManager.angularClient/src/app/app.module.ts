@@ -43,7 +43,7 @@ export const metaReducers: MetaReducer<any>[] = [localStorageSyncReducer];
       user: userReducer,
       devices: devicesReducer
     }, { metaReducers }),
-    //EffectsModule.forRoot([DataEffects])
+    EffectsModule.forRoot([DataEffects])
   ],
   providers: [
     provideHttpClient(),

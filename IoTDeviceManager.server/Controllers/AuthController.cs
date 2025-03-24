@@ -166,7 +166,12 @@ namespace IoTDeviceManager.server.Controllers
             if (user is null)
                 return NotFound(new { Message = "No user found." });
 
-            DateTime accessTokenExpiresAt = DateTime.Parse(principal.FindFirstValue("exp")!);
+            long.TryParse(principal.FindFirstValue("exp"), out long exp);
+
+            if (exp == 0)
+                return Unauthorized(new { Message = "Invalid access token." });
+
+            DateTime accessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(exp).DateTime;
             TimeSpan accessTokenExpiresIn = accessTokenExpiresAt - DateTime.Now;
             DateTimeOffset refreshTokenExpiresAt = rf.Expires;
             TimeSpan refreshTokenExpiresIn = refreshTokenExpiresAt - DateTimeOffset.Now;
