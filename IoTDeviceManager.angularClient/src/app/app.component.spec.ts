@@ -20,10 +20,10 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'IoTDeviceManager.angularClient'`, () => {
+  it(`should have as title 'IDM'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('IoTDeviceManager.angularClient');
+    expect(app.title).toEqual('IDM');
   });
 
   it('should render title', () => {

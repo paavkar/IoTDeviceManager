@@ -150,20 +150,47 @@ namespace IoTDeviceManager.server.Controllers
         public async Task<IActionResult> Me()
         {
             var accessToken = Request.Cookies["auth_token"];
-            if (string.IsNullOrEmpty(accessToken))
-                return Unauthorized(new { Message = "Missing access token." });
+            var refreshToken = Request.Cookies["refresh_token"];
 
-            ClaimsPrincipal principal = tokenService.GetPrincipalFromExpiredToken(accessToken);
+            dynamic result = await tokenService.ValidateTokensAsync(accessToken!, refreshToken!);
 
-            if (principal is null)
-                return Unauthorized(new { Message = "Invalid access token." });
+            if (!result.Success)
+                return Unauthorized(new { Message = result.Message });
 
-            var userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { Message = "Invalid access token." });
+            string userId = result.UserId;
+            ClaimsPrincipal principal = result.Principal;
+            RefreshToken rf = result.RefreshToken;
 
             ApplicationUser? user = await userManager.FindByIdAsync(userId);
-            return user is null ? NotFound(new { Message = "No user found." }) : Ok(user);
+
+            if (user is null)
+                return NotFound(new { Message = "No user found." });
+
+            long.TryParse(principal.FindFirstValue("exp"), out long exp);
+
+            if (exp == 0)
+                return Unauthorized(new { Message = "Invalid access token." });
+
+            DateTime accessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(exp).DateTime;
+            TimeSpan accessTokenExpiresIn = accessTokenExpiresAt - DateTime.Now;
+            DateTimeOffset refreshTokenExpiresAt = rf.Expires;
+            TimeSpan refreshTokenExpiresIn = refreshTokenExpiresAt - DateTimeOffset.Now;
+
+            UserDTO userDTO = new()
+            {
+                UserName = user.UserName!,
+                Email = user.Email!,
+                Roles = [.. principal.FindAll("role").Select(claim => claim.Value)],
+                TokenInfo = new TokenInfo
+                {
+                    AccessTokenExpiresAt = accessTokenExpiresAt,
+                    AccessTokenExpiresIn = accessTokenExpiresIn,
+                    RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                    RefreshTokenExpiresIn = refreshTokenExpiresIn
+                }
+            };
+
+            return Ok(userDTO);
         }
     }
 }

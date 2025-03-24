@@ -22,7 +22,7 @@ namespace IoTDeviceManager.server.Services
                 new(JwtRegisteredClaimNames.UniqueName, user.UserName!),
                 new("email", user.Email!),
                 new Claim(JwtRegisteredClaimNames.Iat,
-                    new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+                    new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             ];
 
             foreach (var role in (await userManager.GetRolesAsync(user)).ToList())
@@ -140,10 +140,11 @@ namespace IoTDeviceManager.server.Services
                 return new { Message = "Refresh token has expired.", Success = false };
 
             var userId = rf.UserId;
+            ClaimsPrincipal? principal = null;
 
             if (!string.IsNullOrEmpty(accessToken))
             {
-                ClaimsPrincipal principal = GetPrincipalFromExpiredToken(accessToken);
+                principal = GetPrincipalFromExpiredToken(accessToken);
                 if (principal is null)
                     return new { Message = "Invalid access token.", Success = false };
 
@@ -157,7 +158,7 @@ namespace IoTDeviceManager.server.Services
             if (!isRefreshValid)
                 return new { Message = "Invalid refresh token.", Success = false };
 
-            return new { UserId = userId, Success = true };
+            return new { UserId = userId, Success = true, RefreshToken = rf, Principal = principal };
         }
     }
 }
