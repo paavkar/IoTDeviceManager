@@ -24,11 +24,11 @@ export interface Sensor {
 }
 
 export interface Device {
-    id: string;
-    isOnline: boolean;
-    lastConnectionTime: Date;
+    id?: string;
+    isOnline?: boolean;
+    lastConnectionTime?: Date;
     name: string;
-    serialNumber: string;
-    userId: string;
-    sensors: Sensor[];
+    serialNumber?: string;
+    userId?: string;
+    sensors?: Sensor[];
 }

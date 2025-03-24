@@ -42,4 +42,17 @@ export class DataEffects {
       )
     )
   );
+
+  addDevice$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(DevicesActions.addDevice),
+      mergeMap(action =>
+        this.dataService.postDevice(action.device).pipe(
+          map((device) => DevicesActions.addDeviceSuccess({ device })),
+          catchError(error => of(DevicesActions.addDeviceFailure({ error })))
+        )
+      )
+    )
+  );
+
 }

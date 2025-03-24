@@ -11,4 +11,19 @@ export const loadDevicesFailure = createAction(
     '[Devices] Load Devices Failure',
     props<{ error: string }>()
 );
+
+export const addDevice = createAction(
+  '[Devices Page] Add Device',
+  props<{ device: Device }>()
+);
+
+export const addDeviceSuccess = createAction(
+  '[Devices API] Add Device Success',
+  props<{ device: Device }>()
+);
+
+export const addDeviceFailure = createAction(
+  '[Devices API] Add Device Failure',
+  props<{ error: any }>()
+);
   

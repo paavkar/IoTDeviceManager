@@ -18,4 +18,8 @@ export class DataService {
   fetchUser(): Observable<User> {
     return this.http.get<User>(this.userEndpoint, { withCredentials: true });
   }
+
+  postDevice(device: Device): Observable<Device> {
+    return this.http.post<Device>(`${this.devicesEndpoint}`, device, { withCredentials: true });
+  }
 }

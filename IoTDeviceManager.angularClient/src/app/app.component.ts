@@ -59,5 +59,5 @@ export class AppComponent implements OnInit {
   toggleDarkMode() {
     const element = document.querySelector('html');
     element?.classList.toggle('idm-dark');
-}
+  }
 }

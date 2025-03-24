@@ -31,9 +31,7 @@ export class DevicesComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    // if (this.devices$ == null) {
-    //   this.store.dispatch(DevicesActions.loadDevices())
-    // }
+    
   }
 
   addDevice(): void {
@@ -41,6 +39,11 @@ export class DevicesComponent implements OnInit {
   }
 
   saveDevice(): void {
+    let device: Device = {
+      name: this.newDeviceName
+    }
+
+    this.store.dispatch(DevicesActions.addDevice({ device }));
 
     this.visible = false;
   }

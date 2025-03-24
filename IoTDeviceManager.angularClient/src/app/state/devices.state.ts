@@ -1,7 +1,7 @@
 import { Device } from "../../types";
 
 export interface DevicesState {
-    data: Device[] | null;
+    data: Device[] | null | undefined;
     loading: boolean;
     error: string | null;
 }

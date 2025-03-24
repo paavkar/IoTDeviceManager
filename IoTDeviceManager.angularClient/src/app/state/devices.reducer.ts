@@ -23,5 +23,10 @@ export const devicesReducer = createReducer(
     ...state,
     loading: false,
     error,
+  })),
+  on(DevicesActions.addDeviceSuccess, (state, { device }) => ({
+    ...state,
+    data: state.data?.concat(device)
   }))
+
 );
