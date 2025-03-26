@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Store, select } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
-import { Device } from '../../../types';
+import { Device, DeviceApiResponse } from '../../../types';
 import * as DevicesSelector from '../../state/devices.selector';
 import * as DevicesActions from '../../state/devices.actions';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 
 
 @Component({
@@ -17,8 +18,9 @@ export class DevicesComponent implements OnInit {
   subscription: Subscription;
   visible: boolean = false;
   newDeviceName: string = "";
+  private devicesEndpoint = '/api/Device';
 
-  constructor(private store: Store) {
+  constructor(private store: Store, private http: HttpClient) {
     this.subscription = this.store
       .pipe(select(DevicesSelector.getDevices))
       .subscribe((devices) => {
@@ -43,7 +45,13 @@ export class DevicesComponent implements OnInit {
       name: this.newDeviceName
     }
 
-    this.store.dispatch(DevicesActions.addDevice({ device }));
+    this.http.post<DeviceApiResponse>(`${this.devicesEndpoint}/create`, device, { withCredentials: true, observe: 'response' })
+      .subscribe((response: HttpResponse<DeviceApiResponse>) => {
+        if (response.ok && response.body) {
+          this.devices.concat(response.body.device);
+          this.store.dispatch(DevicesActions.addDevice({ device }));
+        }
+      });
     this.newDeviceName = "";
 
     this.visible = false;

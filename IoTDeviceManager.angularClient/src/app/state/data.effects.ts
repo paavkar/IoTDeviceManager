@@ -3,7 +3,6 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { mergeMap, map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { Store } from '@ngrx/store';
 
 import * as UserActions from './user.actions';
 import * as DevicesActions from './devices.actions';
@@ -41,17 +40,4 @@ export class DataEffects {
       )
     )
   );
-
-  addDevice$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(DevicesActions.addDevice),
-      mergeMap(action =>
-        this.dataService.postDevice(action.device).pipe(
-          map((device) => DevicesActions.addDeviceSuccess({ device })),
-          catchError(error => of(DevicesActions.addDeviceFailure({ error })))
-        )
-      )
-    )
-  );
-
 }

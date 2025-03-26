@@ -165,6 +165,12 @@ namespace IoTDeviceManager.server.Controllers
 
             if (user is null)
                 return NotFound(new { Message = "No user found." });
+            if (principal is null)
+            {
+                TokenResponse newTokens = await tokenService.GenerateTokensAsync(user!);
+                principal = tokenService.GetPrincipalFromExpiredToken(newTokens.AccessToken);
+                rf = (await tokenService.GetRefreshTokenAsync(newTokens.RefreshToken))!;
+            }
 
             long.TryParse(principal.FindFirstValue("exp"), out long exp);
 

@@ -7,6 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
 namespace IoTDeviceManager.server.Services
 {
@@ -14,6 +16,8 @@ namespace IoTDeviceManager.server.Services
         IConfiguration configuration,
         ApplicationDbContext context)
     {
+        private SqlConnection GetConnection() => new(configuration.GetConnectionString("DefaultConnection"));
+
         public async Task<TokenResponse> GenerateTokensAsync(ApplicationUser user)
         {
             List<Claim> claims =
@@ -63,13 +67,23 @@ namespace IoTDeviceManager.server.Services
             }
             else
             {
-                existingToken.Token = refreshToken;
-                existingToken.Expires = DateTimeOffset.Now.AddDays(7);
-                existingToken.CreatedAt = DateTimeOffset.Now;
+                var connection = GetConnection();
 
-                context.RefreshTokens.Update(existingToken);
+                var updateRefreshTokenSql = """
+                        UPDATE RefreshTokens
+                        SET Token = @Token, Expires = @Expires, CreatedAt = @CreatedAt
+                        WHERE UserId = @UserId
+                    """;
 
-                var updatedCount = await context.SaveChangesAsync();
+                var updatedCount = await connection.ExecuteAsync(updateRefreshTokenSql,
+                    new
+                    {
+                        Token = refreshToken,
+                        Expires = DateTimeOffset.Now.AddDays(7),
+                        CreatedAt = DateTimeOffset.Now,
+                        UserId = user.Id
+                    }
+                );
             }
 
             return new TokenResponse

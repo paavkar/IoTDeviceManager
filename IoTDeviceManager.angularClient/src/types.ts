@@ -32,3 +32,8 @@ export interface Device {
     userId?: string;
     sensors?: Sensor[];
 }
+
+export interface DeviceApiResponse {
+    message: string;
+    device: Device;
+}
