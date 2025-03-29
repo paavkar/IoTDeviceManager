@@ -95,10 +95,13 @@ namespace IoTDeviceManager.server.Controllers
             if (!result.Success)
                 return Unauthorized(new { Message = result.Message });
 
-            dynamic userId = result.UserId;
+            string userId = result.UserId;
 
             ApplicationUser? user = await userManager.FindByIdAsync(userId);
             TokenResponse newTokens = await tokenService.GenerateTokensAsync(user!);
+
+            RefreshToken? rf = await tokenService.GetRefreshTokenAsync(newTokens.RefreshToken);
+            ClaimsPrincipal principal = tokenService.GetPrincipalFromExpiredToken(newTokens.AccessToken);
 
             CookieOptions cookieOptions = new()
             {
@@ -114,7 +117,12 @@ namespace IoTDeviceManager.server.Controllers
             cookieOptions.Expires = DateTimeOffset.Now.AddDays(7);
             Response.Cookies.Append("refresh_token", newTokens.RefreshToken, cookieOptions);
 
-            return Ok(newTokens);
+            var userResult = await tokenService.GetUserFromTokensAsync(principal, user!, rf!);
+
+            if (!userResult.Success)
+                return Unauthorized(new { Message = userResult.Message });
+
+            return Ok(userResult.User);
         }
 
         [HttpPost("logout")]
@@ -165,38 +173,13 @@ namespace IoTDeviceManager.server.Controllers
 
             if (user is null)
                 return NotFound(new { Message = "No user found." });
-            if (principal is null)
-            {
-                TokenResponse newTokens = await tokenService.GenerateTokensAsync(user!);
-                principal = tokenService.GetPrincipalFromExpiredToken(newTokens.AccessToken);
-                rf = (await tokenService.GetRefreshTokenAsync(newTokens.RefreshToken))!;
-            }
 
-            long.TryParse(principal.FindFirstValue("exp"), out long exp);
+            var userResult = await tokenService.GetUserFromTokensAsync(principal, user, rf);
 
-            if (exp == 0)
-                return Unauthorized(new { Message = "Invalid access token." });
+            if (!userResult.Success)
+                return Unauthorized(new { Message = userResult.Message });
 
-            DateTime accessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(exp).DateTime;
-            TimeSpan accessTokenExpiresIn = accessTokenExpiresAt - DateTime.Now;
-            DateTimeOffset refreshTokenExpiresAt = rf.Expires;
-            TimeSpan refreshTokenExpiresIn = refreshTokenExpiresAt - DateTimeOffset.Now;
-
-            UserDTO userDTO = new()
-            {
-                UserName = user.UserName!,
-                Email = user.Email!,
-                Roles = [.. principal.FindAll("role").Select(claim => claim.Value)],
-                TokenInfo = new TokenInfo
-                {
-                    AccessTokenExpiresAt = accessTokenExpiresAt,
-                    AccessTokenExpiresIn = accessTokenExpiresIn,
-                    RefreshTokenExpiresAt = refreshTokenExpiresAt,
-                    RefreshTokenExpiresIn = refreshTokenExpiresIn
-                }
-            };
-
-            return Ok(userDTO);
+            return Ok(userResult.User);
         }
     }
 }

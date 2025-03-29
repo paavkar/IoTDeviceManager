@@ -6,6 +6,7 @@ export interface TokenInfo {
 }
 
 export interface User {
+    id: string;
     userName: string;
     email: string;
     roles: string[];

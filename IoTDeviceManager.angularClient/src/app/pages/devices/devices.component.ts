@@ -1,10 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { Store, select } from '@ngrx/store';
-import { Observable, Subscription } from 'rxjs';
-import { Device, DeviceApiResponse } from '../../../types';
+import { Subscription } from 'rxjs';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
+
+import { Device, DeviceApiResponse, User } from '../../../types';
 import * as DevicesSelector from '../../state/devices.selector';
 import * as DevicesActions from '../../state/devices.actions';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import * as UserActions from '../../state/user.actions';
+import { DataService } from '../../services/data.service';
 
 
 @Component({
@@ -18,6 +22,9 @@ export class DevicesComponent implements OnInit {
   subscription: Subscription;
   visible: boolean = false;
   newDeviceName: string = "";
+  user: User | undefined;
+  
+  private dataService = inject(DataService)
   private devicesEndpoint = '/api/Device';
 
   constructor(private store: Store, private http: HttpClient) {
@@ -33,7 +40,14 @@ export class DevicesComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    
+    this.dataService.fetchUser().subscribe(
+      (response: HttpResponse<User>) => {
+        if (response.ok && response.body) {
+          this.store.dispatch(UserActions.loadUserSuccess({ user: response.body}));
+          this.user = response.body;
+        }
+      }
+    )
   }
 
   addDevice(): void {
@@ -42,11 +56,13 @@ export class DevicesComponent implements OnInit {
 
   saveDevice(): void {
     let device: Device = {
-      name: this.newDeviceName
+      name: this.newDeviceName,
+      userId: this.user?.id
     }
 
     this.http.post<DeviceApiResponse>(`${this.devicesEndpoint}/create`, device, { withCredentials: true, observe: 'response' })
       .subscribe((response: HttpResponse<DeviceApiResponse>) => {
+        console.log(response.body)
         if (response.ok && response.body) {
           this.devices.concat(response.body.device);
           this.store.dispatch(DevicesActions.addDevice({ device }));

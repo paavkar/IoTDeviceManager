@@ -1,4 +1,3 @@
-// state/data.effects.ts
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { mergeMap, map, catchError } from 'rxjs/operators';
@@ -27,17 +26,17 @@ export class DataEffects {
     )
   );
 
-  loadUser$ = createEffect(() => 
-    this.actions$.pipe(
-      ofType(UserActions.loadUser),
-      mergeMap(() =>
-        this.dataService.fetchUser().pipe(
-          map((user) => UserActions.loadUserSuccess({ user })),
-          catchError((error) =>
-            of(UserActions.loadUserFailure({ error: error.message }))
-          )
-        )
-      )
-    )
-  );
+  // loadUser$ = createEffect(() => 
+  //   this.actions$.pipe(
+  //     ofType(UserActions.loadUser),
+  //     mergeMap(() =>
+  //       this.dataService.fetchUser().pipe(
+  //         map((user) => UserActions.loadUserSuccess({ user })),
+  //         catchError((error) =>
+  //           of(UserActions.loadUserFailure({ error: error.message }))
+  //         )
+  //       )
+  //     )
+  //   )
+  // );
 }

@@ -174,5 +174,42 @@ namespace IoTDeviceManager.server.Services
 
             return new { UserId = userId, Success = true, RefreshToken = rf, Principal = principal };
         }
+
+        public async Task<dynamic> GetUserFromTokensAsync(ClaimsPrincipal principal, ApplicationUser user, RefreshToken rf)
+        {
+            if (principal is null)
+            {
+                TokenResponse newTokens = await GenerateTokensAsync(user!);
+                principal = GetPrincipalFromExpiredToken(newTokens.AccessToken);
+                rf = (await GetRefreshTokenAsync(newTokens.RefreshToken))!;
+            }
+
+            long.TryParse(principal.FindFirstValue("exp"), out long exp);
+
+            if (exp == 0)
+                return new { Success = false, Message = "Invalid access token." };
+
+            DateTime accessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(exp).DateTime;
+            TimeSpan accessTokenExpiresIn = accessTokenExpiresAt - DateTime.Now;
+            DateTimeOffset refreshTokenExpiresAt = rf.Expires;
+            TimeSpan refreshTokenExpiresIn = refreshTokenExpiresAt - DateTimeOffset.Now;
+
+            UserDTO userDTO = new()
+            {
+                Id = user.Id,
+                UserName = user.UserName!,
+                Email = user.Email!,
+                Roles = [.. principal.FindAll("role").Select(claim => claim.Value)],
+                TokenInfo = new TokenInfo
+                {
+                    AccessTokenExpiresAt = accessTokenExpiresAt,
+                    AccessTokenExpiresIn = accessTokenExpiresIn,
+                    RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                    RefreshTokenExpiresIn = refreshTokenExpiresIn
+                }
+            };
+
+            return new { Success = true, User = userDTO };
+        }
     }
 }

@@ -1,6 +1,6 @@
 // services/data.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Device, User } from '../../types';
 
@@ -15,8 +15,8 @@ export class DataService {
     return this.http.get<Device[]>(`${this.devicesEndpoint}/`, { withCredentials: true });
   }
 
-  fetchUser(): Observable<User> {
-    return this.http.get<User>(this.userEndpoint, { withCredentials: true });
+  fetchUser(): Observable<HttpResponse<User>> {
+    return this.http.get<User>(this.userEndpoint, { withCredentials: true, observe: 'response' });
   }
 
   postDevice(device: Device): Observable<Device> {

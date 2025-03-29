@@ -4,11 +4,13 @@ import { Title } from '@angular/platform-browser';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { inject } from '@angular/core';
+import { HttpResponse } from '@angular/common/http';
 
 import { User } from '../types';
 import * as UserSelector from './state/user.selector';
 import * as UserActions from './state/user.actions';
+import { DataService } from './services/data.service';
 
 @Component({
   selector: 'app-root',
@@ -24,12 +26,18 @@ export class AppComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private store: Store
   ) {
-    this.user$ = store.select(UserSelector.selectCurrentUser)
+    store.select(UserSelector.selectCurrentUser).subscribe(
+      (user) => {
+        this.user = user;
+      }
+    )
   }
-  user$: Observable<User | null>;
+  user: User | null = null;
   tile = 'IDM';
   year = new Date().getFullYear();
   menuItems: MenuItem[] | undefined;
+
+  private dataService = inject(DataService)
 
   ngOnInit(): void {
     this.router.events.pipe(
@@ -51,9 +59,16 @@ export class AppComponent implements OnInit {
       { label: 'Devices', routerLink: '/devices', icon: 'pi pi-home' }
     ]
 
-    // if (this.user$ == null) {
-    //   this.store.dispatch(UserActions.loadUser())
-    // }
+    if (this.user == null) {
+      this.dataService.fetchUser().subscribe(
+        (response: HttpResponse<User>) => {
+          if (response.ok && response.body) {
+            this.store.dispatch(UserActions.loadUserSuccess({ user: response.body}));
+            this.user = response.body;
+          }
+        }
+      )
+    }
   }
 
   toggleDarkMode() {
