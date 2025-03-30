@@ -1,7 +1,7 @@
 <div class="m-4">
     <span class="text-3xl font-semibold">Your devices</span>
     <p-button class="ml-4 p-2 rounded-md" aria-label="Add a device"
-        label="Add a device" (click)="addDevice()" />
+        label="Add a device" (click)="createDeviceVisible = true" />
     
     <div class="mt-4">
         <p-table [value]="devices" showGridlines [tableStyle]="{ 'min-width': '60rem' }">
@@ -34,7 +34,7 @@
     </div>
     
     <div class="z-1 bg-indigo-800">
-        <p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '30rem', height: 'auto' }">
+        <p-dialog [(visible)]="createDeviceVisible" [modal]="true" [style]="{ width: '30rem', height: 'auto' }">
             <ng-template #header>
                 <div class="inline-flex">
                     <span class="font-semibold">Add a new device</span>
@@ -48,7 +48,7 @@
                 </div>
             </div>
             <ng-template #footer>
-                <p-button class="mr-4 rounded-md p-2" label="Cancel" [text]="true" severity="secondary" (click)="visible = false" />
+                <p-button class="mr-4 rounded-md p-2" label="Cancel" [text]="true" severity="secondary" (click)="createDeviceVisible = false" />
                 <p-button class="rounded-md p-2" label="Save" [outlined]="true" severity="primary" (click)="saveDevice()" />
             </ng-template>
         </p-dialog>

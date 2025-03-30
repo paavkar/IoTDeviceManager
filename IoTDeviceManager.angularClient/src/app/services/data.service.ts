@@ -7,7 +7,7 @@ import { Device, User } from '../../types';
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private devicesEndpoint = '/api/Device';
-  private userEndpoint = '/api/Auth/me';
+  private authEndpoint = '/api/Auth';
 
   constructor(private http: HttpClient) {}
 
@@ -16,7 +16,11 @@ export class DataService {
   }
 
   fetchUser(): Observable<HttpResponse<User>> {
-    return this.http.get<User>(this.userEndpoint, { withCredentials: true, observe: 'response' });
+    return this.http.get<User>(`${this.authEndpoint}/me`, { withCredentials: true, observe: 'response' });
+  }
+
+  refreshLogin(): Observable<HttpResponse<User>> {
+    return this.http.post<User>(`${this.authEndpoint}/refresh`, null, { withCredentials: true, observe: 'response' });
   }
 
   postDevice(device: Device): Observable<Device> {

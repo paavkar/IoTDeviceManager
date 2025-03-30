@@ -59,16 +59,27 @@ export class AppComponent implements OnInit {
       { label: 'Devices', routerLink: '/devices', icon: 'pi pi-home' }
     ]
 
-    if (this.user == null) {
-      this.dataService.fetchUser().subscribe(
-        (response: HttpResponse<User>) => {
-          if (response.ok && response.body) {
-            this.store.dispatch(UserActions.loadUserSuccess({ user: response.body}));
-            this.user = response.body;
-          }
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        let currentTime = new Date();
+
+        if (this.user == null ||
+          (this.user != null && currentTime > this.user?.tokenInfo.refreshTokenExpiresAt)) {
+          window.location.href = '/';
         }
-      )
-    }
+        else if (currentTime > this.user.tokenInfo.accessTokenExpiresAt
+            && currentTime < this.user.tokenInfo.refreshTokenExpiresAt) {
+          this.dataService.refreshLogin().subscribe(
+            (response: HttpResponse<User>) => {
+              if (response.ok && response.body) {
+                this.store.dispatch(UserActions.loadUserSuccess({ user: response.body }));
+                this.user = response.body;
+              }
+            }
+          )
+        }
+      }
+    })
   }
 
   toggleDarkMode() {

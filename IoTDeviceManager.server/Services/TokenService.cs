@@ -189,7 +189,7 @@ namespace IoTDeviceManager.server.Services
             if (exp == 0)
                 return new { Success = false, Message = "Invalid access token." };
 
-            DateTime accessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(exp).DateTime;
+            DateTimeOffset accessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(exp);
             TimeSpan accessTokenExpiresIn = accessTokenExpiresAt - DateTime.Now;
             DateTimeOffset refreshTokenExpiresAt = rf.Expires;
             TimeSpan refreshTokenExpiresIn = refreshTokenExpiresAt - DateTimeOffset.Now;

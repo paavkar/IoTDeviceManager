@@ -17,7 +17,7 @@ export const devicesReducer = createReducer(
   on(DevicesActions.loadDevicesSuccess, (state, { devices }) => ({
     ...state,
     data: devices,
-    loading: false,
+    loading: false
   })),
   on(DevicesActions.loadDevicesFailure, (state, { error }) => ({
     ...state,

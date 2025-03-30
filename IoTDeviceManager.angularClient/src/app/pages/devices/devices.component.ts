@@ -3,12 +3,14 @@ import { Store, select } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
 
 import { Device, DeviceApiResponse, User } from '../../../types';
 import * as DevicesSelector from '../../state/devices.selector';
 import * as DevicesActions from '../../state/devices.actions';
 import * as UserActions from '../../state/user.actions';
 import { DataService } from '../../services/data.service';
+import * as UserSelector from '../../state/user.selector';
 
 
 @Component({
@@ -20,14 +22,14 @@ import { DataService } from '../../services/data.service';
 export class DevicesComponent implements OnInit {
   devices: Device[] = [];
   subscription: Subscription;
-  visible: boolean = false;
+  createDeviceVisible: boolean = false;
   newDeviceName: string = "";
-  user: User | undefined;
+  user: User | undefined | null;
   
   private dataService = inject(DataService)
   private devicesEndpoint = '/api/Device';
 
-  constructor(private store: Store, private http: HttpClient) {
+  constructor(private store: Store, private http: HttpClient, private router: Router) {
     this.subscription = this.store
       .pipe(select(DevicesSelector.getDevices))
       .subscribe((devices) => {
@@ -40,18 +42,15 @@ export class DevicesComponent implements OnInit {
   }
   
   ngOnInit(): void {
-    this.dataService.fetchUser().subscribe(
-      (response: HttpResponse<User>) => {
-        if (response.ok && response.body) {
-          this.store.dispatch(UserActions.loadUserSuccess({ user: response.body}));
-          this.user = response.body;
-        }
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.store.select(UserSelector.selectCurrentUser).subscribe(
+          (user) => {
+            this.user = user;
+          }
+        )
       }
-    )
-  }
-
-  addDevice(): void {
-    this.visible = true;
+    })
   }
 
   saveDevice(): void {
@@ -62,14 +61,13 @@ export class DevicesComponent implements OnInit {
 
     this.http.post<DeviceApiResponse>(`${this.devicesEndpoint}/create`, device, { withCredentials: true, observe: 'response' })
       .subscribe((response: HttpResponse<DeviceApiResponse>) => {
-        console.log(response.body)
         if (response.ok && response.body) {
           this.devices.concat(response.body.device);
-          this.store.dispatch(DevicesActions.addDevice({ device }));
+          this.store.dispatch(DevicesActions.addDevice({ device: response.body.device }));
         }
       });
     this.newDeviceName = "";
 
-    this.visible = false;
+    this.createDeviceVisible = false;
   }
 }

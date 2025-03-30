@@ -2,7 +2,7 @@
 {
     public class TokenInfo
     {
-        public DateTime AccessTokenExpiresAt { get; set; }
+        public DateTimeOffset AccessTokenExpiresAt { get; set; }
         public TimeSpan? AccessTokenExpiresIn { get; set; }
         public DateTimeOffset? RefreshTokenExpiresAt { get; set; }
         public TimeSpan? RefreshTokenExpiresIn { get; set; }
