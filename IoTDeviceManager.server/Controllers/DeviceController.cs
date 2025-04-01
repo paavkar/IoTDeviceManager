@@ -11,7 +11,7 @@ namespace IoTDeviceManager.server.Controllers
     public class DeviceController(TokenService tokenService, UserManager<ApplicationUser> userManager, IDeviceService deviceService) : ControllerBase
     {
         [HttpGet("")]
-        public async Task<ActionResult<IEnumerable<Device>>> GetDevices()
+        public async Task<IActionResult> GetDevices()
         {
             var accessToken = Request.Cookies["auth_token"];
             var refreshToken = Request.Cookies["refresh_token"];
@@ -78,10 +78,58 @@ namespace IoTDeviceManager.server.Controllers
             string userId = result.UserId;
             Device device = await deviceService.GetDeviceAsync(serialNumber);
 
+            if (device == null)
+                return NotFound(new { Message = "Device not found with given Serial number." });
+
             if (device.UserId != userId)
                 return Unauthorized(new { Message = "You are not authorized to view this device." });
 
             return Ok(device);
+        }
+
+        [HttpPut("{serialNumber}")]
+        public async Task<IActionResult> UpdateDevice(string serialNumber, string name, string measurementType, string unit, double latestReading)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(measurementType) || string.IsNullOrWhiteSpace(unit))
+                return BadRequest(new { Message = "Name, MeasurementType and Unit are required fields. Make sure you include them in your request." });
+
+            Device existingDevice = await deviceService.GetDeviceAsync(serialNumber);
+
+            if (existingDevice == null)
+                return NotFound(new { Message = "Device not found with given Serial number." });
+
+            existingDevice.IsOnline = true;
+            existingDevice.LastConnectionTime = DateTimeOffset.Now;
+
+            Sensor? existingSensor = await deviceService.GetExistingSensorAsync(name, serialNumber);
+
+            if (existingSensor == null)
+            {
+                existingSensor = new() {
+                    Id = Guid.CreateVersion7().ToString(),
+                    IsOnline = true,
+                    LastConnectionTime = DateTimeOffset.Now,
+                    MeasurementType = measurementType,
+                    Unit = unit,
+                    Name = name,
+                    LatestReading = latestReading,
+                    DeviceSerialNumber = serialNumber,
+                };
+            }
+            else
+            {
+                existingSensor.IsOnline = true;
+                existingSensor.LastConnectionTime = DateTimeOffset.Now;
+                existingSensor.LatestReading = latestReading;
+            }
+
+            var deviceUpdated = await deviceService.UpdateDeviceAsync(existingDevice);
+            var sensorUpdated = await deviceService.UpdateDeviceSensorAsync(existingDevice, existingSensor!);
+
+            return deviceUpdated && sensorUpdated
+                ? Ok(new { Message = "Device and its sensors updated successfully." })
+                : BadRequest(new { Message = "Something went wrong updating the device and its sensor." +
+                    "Make sure the device serial number is correct and sensor name is unique for the device." });
         }
     }
 }

@@ -132,5 +132,61 @@ namespace IoTDeviceManager.server.Services
 
             return sql;
         }
+
+        public async Task<bool> UpdateDeviceAsync(Device device)
+        {
+            var sql = """
+                UPDATE Devices
+                SET Name = @Name, IsOnline = @IsOnline, LastConnectionTime = @LastConnectionTime
+                WHERE SerialNumber = @SerialNumber
+            """;
+            using var connection = GetConnection();
+            var updatedCount = await connection.ExecuteAsync(sql, device);
+
+            return updatedCount > 0;
+        }
+
+        public async Task<bool> UpdateDeviceSensorAsync(Device device, Sensor sensor)
+        {
+            if (device.Sensors!.Exists(s => s.Id == sensor.Id))
+            {
+                var sql = """
+                    UPDATE Sensors
+                    SET IsOnline = @IsOnline, LastConnectionTime = @LastConnectionTime, LatestReading = @LatestReading
+                    WHERE Id = @Id
+                """;
+                using var connection = GetConnection();
+                var updatedCount = await connection.ExecuteAsync(sql, sensor);
+
+                return updatedCount > 0;
+            }
+            else
+            {
+               var sql = """
+                    INSERT INTO Sensors (Id, IsOnline, LastConnectionTime, MeasurementType, Unit, Name, LatestReading, DeviceSerialNumber)
+                    VALUES (@Id, @IsOnline, @LastConnectionTime, @MeasurementType, @Unit, @Name, @LatestReading, @DeviceSerialNumber)
+                """;
+
+                using var connection = GetConnection();
+                var insertedCount = await connection.ExecuteAsync(sql, sensor);
+
+                return insertedCount > 0;
+            }
+        }
+
+        public async Task<Sensor?> GetExistingSensorAsync(string sensorName, string deviceSerialNumber)
+        {
+            var sql = """
+                SELECT *
+                FROM Sensors
+                WHERE Name = @SensorName
+                AND DeviceSerialNumber = @DeviceSerialNumber
+            """;
+
+            using var connection = GetConnection();
+            var sensor = await connection.QueryFirstOrDefaultAsync<Sensor>(sql, new { SensorName = sensorName, DeviceSerialNumber = deviceSerialNumber });
+
+            return sensor;
+        }
     }
 }
