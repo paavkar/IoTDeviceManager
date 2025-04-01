@@ -79,7 +79,59 @@ namespace IoTDeviceManager.server.Services
         }
 
 
-        public Task<Device> GetDeviceAsync(string id) => throw new NotImplementedException();
-        public Task<IEnumerable<Device>> GetDevicesAsync() => throw new NotImplementedException();
+        public async Task<Device> GetDeviceAsync(string serialNumber)
+        {
+            var sql = GetDeviceSql(true);
+
+            var devices = await QueryDevicesAsync(sql, new { SerialNumber = serialNumber });
+            return devices.Distinct().ToList().First();
+        }
+
+        public async Task<IEnumerable<Device>> GetDevicesAsync(string userId)
+        {
+            var sql = GetDeviceSql();
+
+            var devices = await QueryDevicesAsync(sql, new { UserId = userId });
+            return devices.Distinct();
+        }
+
+        private async Task<IEnumerable<Device>> QueryDevicesAsync(string sql, object parameters)
+        {
+            var devicesDictionary = new Dictionary<string, Device>();
+            using var connection = GetConnection();
+            var devicesList = await connection.QueryAsync<Device, Sensor, Device>(
+                sql,
+                (device, sensor) =>
+                {
+                    if (!devicesDictionary.TryGetValue(device.SerialNumber!, out var deviceEntry))
+                    {
+                        deviceEntry = device;
+                        deviceEntry.Sensors = new List<Sensor>();
+                        devicesDictionary.Add(deviceEntry.SerialNumber!, deviceEntry);
+                    }
+                    if (!string.IsNullOrEmpty(sensor.Id) && !deviceEntry.Sensors!.Exists(s => s.Id == sensor.Id))
+                        deviceEntry.Sensors.Add(sensor);
+                    return deviceEntry;
+                },
+                parameters,
+                splitOn: "SensorId"
+            );
+
+            return devicesList;
+        }
+
+        private string GetDeviceSql(bool singleSeries = false)
+        {
+            var sql = """
+                SELECT d.*, s.Id AS SensorId, s.*
+                FROM Devices d
+                LEFT JOIN Sensors s ON d.SerialNumber = s.DeviceSerialNumber
+            """;
+            if (singleSeries)
+                sql += " WHERE SerialNumber = @SerialNumber";
+            else sql += " WHERE d.UserId = @UserId";
+
+            return sql;
+        }
     }
 }

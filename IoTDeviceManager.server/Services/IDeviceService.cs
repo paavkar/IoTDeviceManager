@@ -4,8 +4,8 @@ namespace IoTDeviceManager.server.Services
 {
     public interface IDeviceService
     {
-        Task<IEnumerable<Device>> GetDevicesAsync();
-        Task<Device> GetDeviceAsync(string id);
+        Task<IEnumerable<Device>> GetDevicesAsync(string userId);
+        Task<Device> GetDeviceAsync(string serialNumber);
         Task<dynamic> CreateDeviceAsync(Device device);
     }
 }
