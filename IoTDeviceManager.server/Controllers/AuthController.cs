@@ -90,43 +90,18 @@ namespace IoTDeviceManager.server.Controllers
             var accessToken = Request.Cookies["auth_token"];
             var refreshToken = Request.Cookies["refresh_token"];
 
-            if (string.IsNullOrEmpty(accessToken) && string.IsNullOrEmpty(refreshToken))
-                return Unauthorized(new { Message = "Missing tokens." });
+            dynamic result = await tokenService.ValidateTokensAsync(accessToken!, refreshToken!);
 
-            if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized(new { Message = "Missing refresh token." });
+            if (!result.Success)
+                return Unauthorized(new { Message = result.Message });
 
-            RefreshToken? rf = await tokenService.GetRefreshTokenAsync(refreshToken);
-
-            if (rf is null)
-                return Unauthorized(new { Message = "Invalid refresh token." });
-
-            if (rf.Revoked)
-                return Unauthorized(new { Message = "Refresh token has been revoked." });
-
-            if (rf.Expires < DateTimeOffset.Now)
-                return Unauthorized(new { Message = "Refresh token has expired." });
-
-            var userId = rf.UserId;
-
-            if (!string.IsNullOrEmpty(accessToken))
-            {
-                ClaimsPrincipal principal = tokenService.GetPrincipalFromExpiredToken(accessToken);
-                if (principal is null)
-                    return Unauthorized(new { Message = "Invalid access token." });
-
-                userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-            }
-
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { Message = "Invalid access token." });
-
-            var isRefreshValid = await tokenService.ValidateRefreshTokenAsync(userId, refreshToken);
-            if (!isRefreshValid)
-                return Unauthorized(new { Message = "Invalid refresh token." });
+            string userId = result.UserId;
 
             ApplicationUser? user = await userManager.FindByIdAsync(userId);
             TokenResponse newTokens = await tokenService.GenerateTokensAsync(user!);
+
+            RefreshToken? rf = await tokenService.GetRefreshTokenAsync(newTokens.RefreshToken);
+            ClaimsPrincipal principal = tokenService.GetPrincipalFromExpiredToken(newTokens.AccessToken);
 
             CookieOptions cookieOptions = new()
             {
@@ -142,7 +117,12 @@ namespace IoTDeviceManager.server.Controllers
             cookieOptions.Expires = DateTimeOffset.Now.AddDays(7);
             Response.Cookies.Append("refresh_token", newTokens.RefreshToken, cookieOptions);
 
-            return Ok(newTokens);
+            var userResult = await tokenService.GetUserFromTokensAsync(principal, user!, rf!);
+
+            if (!userResult.Success)
+                return Unauthorized(new { Message = userResult.Message });
+
+            return Ok(userResult.User);
         }
 
         [HttpPost("logout")]
@@ -178,20 +158,28 @@ namespace IoTDeviceManager.server.Controllers
         public async Task<IActionResult> Me()
         {
             var accessToken = Request.Cookies["auth_token"];
-            if (string.IsNullOrEmpty(accessToken))
-                return Unauthorized(new { Message = "Missing access token." });
+            var refreshToken = Request.Cookies["refresh_token"];
 
-            ClaimsPrincipal principal = tokenService.GetPrincipalFromExpiredToken(accessToken);
+            dynamic result = await tokenService.ValidateTokensAsync(accessToken!, refreshToken!);
 
-            if (principal is null)
-                return Unauthorized(new { Message = "Invalid access token." });
+            if (!result.Success)
+                return Unauthorized(new { Message = result.Message });
 
-            var userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized(new { Message = "Invalid access token." });
+            string userId = result.UserId;
+            ClaimsPrincipal principal = result.Principal;
+            RefreshToken rf = result.RefreshToken;
 
             ApplicationUser? user = await userManager.FindByIdAsync(userId);
-            return user is null ? NotFound(new { Message = "No user found." }) : Ok(user);
+
+            if (user is null)
+                return NotFound(new { Message = "No user found." });
+
+            var userResult = await tokenService.GetUserFromTokensAsync(principal, user, rf);
+
+            if (!userResult.Success)
+                return Unauthorized(new { Message = userResult.Message });
+
+            return Ok(userResult.User);
         }
     }
 }

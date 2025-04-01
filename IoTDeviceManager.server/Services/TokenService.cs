@@ -7,6 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
 namespace IoTDeviceManager.server.Services
 {
@@ -14,6 +16,8 @@ namespace IoTDeviceManager.server.Services
         IConfiguration configuration,
         ApplicationDbContext context)
     {
+        private SqlConnection GetConnection() => new(configuration.GetConnectionString("DefaultConnection"));
+
         public async Task<TokenResponse> GenerateTokensAsync(ApplicationUser user)
         {
             List<Claim> claims =
@@ -22,14 +26,12 @@ namespace IoTDeviceManager.server.Services
                 new(JwtRegisteredClaimNames.UniqueName, user.UserName!),
                 new("email", user.Email!),
                 new Claim(JwtRegisteredClaimNames.Iat,
-                    new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+                    new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             ];
 
-            var i = 1;
             foreach (var role in (await userManager.GetRolesAsync(user)).ToList())
             {
-                claims.Add(new($"role{i}", role));
-                i++;
+                claims.Add(new($"role", role));
             }
 
             SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
@@ -65,13 +67,23 @@ namespace IoTDeviceManager.server.Services
             }
             else
             {
-                existingToken.Token = refreshToken;
-                existingToken.Expires = DateTimeOffset.Now.AddDays(7);
-                existingToken.CreatedAt = DateTimeOffset.Now;
+                var connection = GetConnection();
 
-                context.RefreshTokens.Update(existingToken);
+                var updateRefreshTokenSql = """
+                        UPDATE RefreshTokens
+                        SET Token = @Token, Expires = @Expires, CreatedAt = @CreatedAt
+                        WHERE UserId = @UserId
+                    """;
 
-                var updatedCount = await context.SaveChangesAsync();
+                var updatedCount = await connection.ExecuteAsync(updateRefreshTokenSql,
+                    new
+                    {
+                        Token = refreshToken,
+                        Expires = DateTimeOffset.Now.AddDays(7),
+                        CreatedAt = DateTimeOffset.Now,
+                        UserId = user.Id
+                    }
+                );
             }
 
             return new TokenResponse
@@ -121,5 +133,83 @@ namespace IoTDeviceManager.server.Services
         }
 
         public async Task<RefreshToken?> GetRefreshTokenAsync(string refreshToken) => await context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+
+        public async Task<dynamic> ValidateTokensAsync(string accessToken, string refreshToken)
+        {
+            if (string.IsNullOrEmpty(accessToken) && string.IsNullOrEmpty(refreshToken))
+                return new { Message = "Missing tokens.", Success = false };
+
+            if (string.IsNullOrEmpty(refreshToken))
+                return new { Message = "Missing refresh token.", Success = false };
+
+            RefreshToken? rf = await GetRefreshTokenAsync(refreshToken);
+
+            if (rf is null)
+                return new { Message = "Invalid refresh token.", Success = false };
+
+            if (rf.Revoked)
+                return new { Message = "Refresh token has been revoked.", Success = false };
+
+            if (rf.Expires < DateTimeOffset.Now)
+                return new { Message = "Refresh token has expired.", Success = false };
+
+            var userId = rf.UserId;
+            ClaimsPrincipal? principal = null;
+
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                principal = GetPrincipalFromExpiredToken(accessToken);
+                if (principal is null)
+                    return new { Message = "Invalid access token.", Success = false };
+
+                userId = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            }
+
+            if (string.IsNullOrEmpty(userId))
+                return new { Message = "Invalid access token.", Success = false };
+
+            var isRefreshValid = await ValidateRefreshTokenAsync(userId, refreshToken);
+            if (!isRefreshValid)
+                return new { Message = "Invalid refresh token.", Success = false };
+
+            return new { UserId = userId, Success = true, RefreshToken = rf, Principal = principal };
+        }
+
+        public async Task<dynamic> GetUserFromTokensAsync(ClaimsPrincipal principal, ApplicationUser user, RefreshToken rf)
+        {
+            if (principal is null)
+            {
+                TokenResponse newTokens = await GenerateTokensAsync(user!);
+                principal = GetPrincipalFromExpiredToken(newTokens.AccessToken);
+                rf = (await GetRefreshTokenAsync(newTokens.RefreshToken))!;
+            }
+
+            long.TryParse(principal.FindFirstValue("exp"), out long exp);
+
+            if (exp == 0)
+                return new { Success = false, Message = "Invalid access token." };
+
+            DateTimeOffset accessTokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(exp);
+            TimeSpan accessTokenExpiresIn = accessTokenExpiresAt - DateTime.Now;
+            DateTimeOffset refreshTokenExpiresAt = rf.Expires;
+            TimeSpan refreshTokenExpiresIn = refreshTokenExpiresAt - DateTimeOffset.Now;
+
+            UserDTO userDTO = new()
+            {
+                Id = user.Id,
+                UserName = user.UserName!,
+                Email = user.Email!,
+                Roles = [.. principal.FindAll("role").Select(claim => claim.Value)],
+                TokenInfo = new TokenInfo
+                {
+                    AccessTokenExpiresAt = accessTokenExpiresAt,
+                    AccessTokenExpiresIn = accessTokenExpiresIn,
+                    RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                    RefreshTokenExpiresIn = refreshTokenExpiresIn
+                }
+            };
+
+            return new { Success = true, User = userDTO };
+        }
     }
 }
