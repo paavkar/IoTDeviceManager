@@ -11,6 +11,7 @@ import { User } from '../types';
 import * as UserSelector from './state/user.selector';
 import * as UserActions from './state/user.actions';
 import { DataService } from './services/data.service';
+import * as DevicesActions from './state/devices.actions';
 
 @Component({
   selector: 'app-root',
@@ -74,6 +75,11 @@ export class AppComponent implements OnInit {
               if (response.ok && response.body) {
                 this.store.dispatch(UserActions.loadUserSuccess({ user: response.body }));
                 this.user = response.body;
+              }
+              else {
+                this.store.dispatch(UserActions.logout())
+                this.store.dispatch(DevicesActions.unloadDevices())
+                window.location.href = '/';
               }
             }
           )

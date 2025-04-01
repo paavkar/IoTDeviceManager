@@ -78,7 +78,6 @@ namespace IoTDeviceManager.server.Services
             return sb.ToString();
         }
 
-
         public async Task<Device> GetDeviceAsync(string serialNumber)
         {
             var sql = GetDeviceSql(true);
@@ -120,18 +119,74 @@ namespace IoTDeviceManager.server.Services
             return devicesList;
         }
 
-        private string GetDeviceSql(bool singleSeries = false)
+        private string GetDeviceSql(bool singleDevice = false)
         {
             var sql = """
                 SELECT d.*, s.Id AS SensorId, s.*
                 FROM Devices d
                 LEFT JOIN Sensors s ON d.SerialNumber = s.DeviceSerialNumber
             """;
-            if (singleSeries)
+            if (singleDevice)
                 sql += " WHERE SerialNumber = @SerialNumber";
             else sql += " WHERE d.UserId = @UserId";
 
             return sql;
+        }
+
+        public async Task<bool> UpdateDeviceAsync(Device device)
+        {
+            var sql = """
+                UPDATE Devices
+                SET Name = @Name, IsOnline = @IsOnline, LastConnectionTime = @LastConnectionTime
+                WHERE SerialNumber = @SerialNumber
+            """;
+            using var connection = GetConnection();
+            var updatedCount = await connection.ExecuteAsync(sql, device);
+
+            return updatedCount > 0;
+        }
+
+        public async Task<bool> UpdateDeviceSensorAsync(Device device, Sensor sensor)
+        {
+            if (device.Sensors!.Exists(s => s.Id == sensor.Id))
+            {
+                var sql = """
+                    UPDATE Sensors
+                    SET IsOnline = @IsOnline, LastConnectionTime = @LastConnectionTime, LatestReading = @LatestReading
+                    WHERE Id = @Id
+                """;
+                using var connection = GetConnection();
+                var updatedCount = await connection.ExecuteAsync(sql, sensor);
+
+                return updatedCount > 0;
+            }
+            else
+            {
+               var sql = """
+                    INSERT INTO Sensors (Id, IsOnline, LastConnectionTime, MeasurementType, Unit, Name, LatestReading, DeviceSerialNumber)
+                    VALUES (@Id, @IsOnline, @LastConnectionTime, @MeasurementType, @Unit, @Name, @LatestReading, @DeviceSerialNumber)
+                """;
+
+                using var connection = GetConnection();
+                var insertedCount = await connection.ExecuteAsync(sql, sensor);
+
+                return insertedCount > 0;
+            }
+        }
+
+        public async Task<Sensor?> GetExistingSensorAsync(string sensorName, string deviceSerialNumber)
+        {
+            var sql = """
+                SELECT *
+                FROM Sensors
+                WHERE Name = @SensorName
+                AND DeviceSerialNumber = @DeviceSerialNumber
+            """;
+
+            using var connection = GetConnection();
+            var sensor = await connection.QueryFirstOrDefaultAsync<Sensor>(sql, new { SensorName = sensorName, DeviceSerialNumber = deviceSerialNumber });
+
+            return sensor;
         }
     }
 }
