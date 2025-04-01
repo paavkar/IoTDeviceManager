@@ -26,7 +26,6 @@ namespace IoTDeviceManager.server.Controllers
             return Ok(devices);
         }
 
-
         [HttpPost("create")]
         public async Task<IActionResult> CreateDevice([FromBody] Device device)
         {
@@ -63,6 +62,26 @@ namespace IoTDeviceManager.server.Controllers
                 return Ok(new { Message = "Device created successfully.", Device = created.Device });
 
             return BadRequest(new { Message = "Device creation failed. Make sure you are giving the required parameters." });
+        }
+
+        [HttpGet("{serialNumber}")]
+        public async Task<IActionResult> GetDevice(string serialNumber)
+        {
+            var accessToken = Request.Cookies["auth_token"];
+            var refreshToken = Request.Cookies["refresh_token"];
+
+            dynamic result = await tokenService.ValidateTokensAsync(accessToken!, refreshToken!);
+
+            if (!result.Success)
+                return Unauthorized(new { Message = result.Message });
+
+            string userId = result.UserId;
+            Device device = await deviceService.GetDeviceAsync(serialNumber);
+
+            if (device.UserId != userId)
+                return Unauthorized(new { Message = "You are not authorized to view this device." });
+
+            return Ok(device);
         }
     }
 }

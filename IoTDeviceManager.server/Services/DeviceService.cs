@@ -78,7 +78,6 @@ namespace IoTDeviceManager.server.Services
             return sb.ToString();
         }
 
-
         public async Task<Device> GetDeviceAsync(string serialNumber)
         {
             var sql = GetDeviceSql(true);
@@ -120,14 +119,14 @@ namespace IoTDeviceManager.server.Services
             return devicesList;
         }
 
-        private string GetDeviceSql(bool singleSeries = false)
+        private string GetDeviceSql(bool singleDevice = false)
         {
             var sql = """
                 SELECT d.*, s.Id AS SensorId, s.*
                 FROM Devices d
                 LEFT JOIN Sensors s ON d.SerialNumber = s.DeviceSerialNumber
             """;
-            if (singleSeries)
+            if (singleDevice)
                 sql += " WHERE SerialNumber = @SerialNumber";
             else sql += " WHERE d.UserId = @UserId";
 
