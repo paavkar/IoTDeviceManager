@@ -10,6 +10,23 @@ namespace IoTDeviceManager.server.Controllers
     [ApiController]
     public class DeviceController(TokenService tokenService, UserManager<ApplicationUser> userManager, IDeviceService deviceService) : ControllerBase
     {
+        [HttpGet("")]
+        public async Task<ActionResult<IEnumerable<Device>>> GetDevices()
+        {
+            var accessToken = Request.Cookies["auth_token"];
+            var refreshToken = Request.Cookies["refresh_token"];
+            dynamic result = await tokenService.ValidateTokensAsync(accessToken!, refreshToken!);
+
+            if (!result.Success)
+                return Unauthorized(new { Message = result.Message });
+
+            string userId = result.UserId;
+            IEnumerable<Device> devices = await deviceService.GetDevicesAsync(userId);
+
+            return Ok(devices);
+        }
+
+
         [HttpPost("create")]
         public async Task<IActionResult> CreateDevice([FromBody] Device device)
         {
