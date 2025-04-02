@@ -10,7 +10,7 @@ import { IdentityError, RegisteredUser } from "../../types"
 const Schema = z.object({
     email: z.string().min(1, { message: "Email cannot be empty" }).email({ message: "Email must be of valid form" }),
     userName: z.string().min(1, {  message: "Username cannot be empty" }),
-    password: z.string().min(8, { message: "Password must be at least 8 characters long" }),
+    password: z.string().min(8, { message: "Password must be at least 8 characters long, have a combination of upper and lower case letters, at least one number, and a non-numeric character." }),
     confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
     message: "Passwords must match",

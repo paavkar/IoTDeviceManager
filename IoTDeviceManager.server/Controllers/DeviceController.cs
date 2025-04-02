@@ -88,9 +88,9 @@ namespace IoTDeviceManager.server.Controllers
         }
 
         [HttpPut("{serialNumber}")]
-        public async Task<IActionResult> UpdateDevice(string serialNumber, string name, string measurementType, string unit, double latestReading)
+        public async Task<IActionResult> UpdateDevice(string serialNumber, [FromBody]DeviceSensorRequest request)
         {
-            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(measurementType) || string.IsNullOrWhiteSpace(unit))
+            if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.MeasurementType) || string.IsNullOrWhiteSpace(request.Unit))
                 return BadRequest(new { Message = "Name, MeasurementType and Unit are required fields. Make sure you include them in your request." });
 
             Device existingDevice = await deviceService.GetDeviceAsync(serialNumber);
@@ -101,7 +101,7 @@ namespace IoTDeviceManager.server.Controllers
             existingDevice.IsOnline = true;
             existingDevice.LastConnectionTime = DateTimeOffset.Now;
 
-            Sensor? existingSensor = await deviceService.GetExistingSensorAsync(name, serialNumber);
+            Sensor? existingSensor = await deviceService.GetExistingSensorAsync(request.Name, serialNumber);
 
             if (existingSensor == null)
             {
@@ -109,10 +109,10 @@ namespace IoTDeviceManager.server.Controllers
                     Id = Guid.CreateVersion7().ToString(),
                     IsOnline = true,
                     LastConnectionTime = DateTimeOffset.Now,
-                    MeasurementType = measurementType,
-                    Unit = unit,
-                    Name = name,
-                    LatestReading = latestReading,
+                    MeasurementType = request.MeasurementType,
+                    Unit = request.Unit,
+                    Name = request.Name,
+                    LatestReading = request.LatestReading,
                     DeviceSerialNumber = serialNumber,
                 };
             }
@@ -120,7 +120,7 @@ namespace IoTDeviceManager.server.Controllers
             {
                 existingSensor.IsOnline = true;
                 existingSensor.LastConnectionTime = DateTimeOffset.Now;
-                existingSensor.LatestReading = latestReading;
+                existingSensor.LatestReading = request.LatestReading;
             }
 
             var deviceUpdated = await deviceService.UpdateDeviceAsync(existingDevice);
