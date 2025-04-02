@@ -52,8 +52,7 @@ export const SignIn = () => {
                 {httpError && 
                 <p style={{ color: 'red', width: '17em', height: '2em', borderRadius: '0.2em' }}>{httpError}</p>}
 
-                <div style={{ display:'flex', flexDirection: 'column' }}>
-
+                <div style={{ display:'flex', flexDirection: 'column', width: '20vw' }}>
                     <Field label={"Email or username"} validationMessage={errors.emailOrUserName?.message}
                                             style={{ marginBottom: "1em" }}>
                         <Input

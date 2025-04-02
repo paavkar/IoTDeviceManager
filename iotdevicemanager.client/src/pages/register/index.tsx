@@ -3,7 +3,8 @@ import { NavLink } from "react-router-dom"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useState } from "react"
-import { Button, Text, Field, Input, Title1 } from "@fluentui/react-components"
+import { Button, Text, Field, Input, Title1, List, ListItem } from "@fluentui/react-components"
+import { Checkmark20Filled, Dismiss20Filled } from '@fluentui/react-icons';
 
 import { IdentityError, RegisteredUser } from "../../types"
 
@@ -29,6 +30,11 @@ export const Register = () => {
     })
     const [httpErrors, setHttpErrors] = useState<IdentityError[]>([]);
     const [httpSuccess, setHttpSuccess] = useState("");
+    const [pwContainsUpperCase, setPwContainsUpperCase] = useState(false);
+    const [pwContainsLowerCase, setPwContainsLowerCase] = useState(false);
+    const [pwContainsNumber, setPwContainsNumber] = useState(false);
+    const [pwContainsSpecialCharacter, setPwContainsSpecialCharacter] = useState(false);
+    const [pwLength, setPwLength] = useState(false);
 
     async function onSubmit(values: z.infer<typeof Schema>) {
         var response = await fetch("/api/Auth/register", {
@@ -53,6 +59,29 @@ export const Register = () => {
         }
     }
 
+    const onPasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (["0","1","2","3","4","5","6","7","8","9"].some(v => event.target.value.includes(v))) {
+            setPwContainsNumber(true);
+        }
+        else setPwContainsNumber(false)
+        if (["@","%","+","!","#","$","?","~","_","-",":"].some(v => event.target.value.includes(v))) {
+            setPwContainsSpecialCharacter(true);
+        }
+        else setPwContainsSpecialCharacter(false)
+        if (/[A-Z]/.test(event.target.value)) {
+            setPwContainsUpperCase(true)
+        }
+        else setPwContainsUpperCase(false)
+        if (/[a-z]/.test(event.target.value)) {
+            setPwContainsLowerCase(true)
+        }
+        else setPwContainsLowerCase(false)
+        if (event.target.value.length >= 8) {
+            setPwLength(true)
+        }
+        else setPwLength(false)
+    }
+
     return (
         <div style={{ display:' flex', alignItems:'center', flexDirection: 'column', width: '90vw', marginLeft: '5em' }}>
             <div style={{ marginBottom: '1em'}}>
@@ -68,7 +97,7 @@ export const Register = () => {
                 {httpSuccess && 
                 <p style={{ color: 'green', width: '17em', height: '2em', borderRadius: '0.2em' }}>{httpSuccess}</p>}
 
-                <div style={{ display:'flex', flexDirection: 'column', marginTop: '2em' }}>
+                <div style={{ display:'flex', flexDirection: 'column', marginTop: '2em', width: '20vw' }}>
                     <Field label={"Email"} validationMessage={errors.email?.message}
                         style={{ marginBottom: "1em" }}>
                         <Input
@@ -88,13 +117,58 @@ export const Register = () => {
                         </Input>
                     </Field>
 
+                    <Text weight="semibold">Password requirements</Text>
+                    <List>
+                        <div style={{ display: 'flex', flexDirection: 'row' }}>
+                            <ListItem>
+                                <Text style={{ fontSize: '0.9em' }}>8 characters long</Text>
+                            </ListItem>
+                            {pwLength
+                                ? <Checkmark20Filled style={{ color: 'green' }} />
+                                : <Dismiss20Filled style={{ color: 'red' }} /> }
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'row' }}>
+                            <ListItem>
+                                <Text style={{ fontSize: '0.9em' }}>At least one upper case letter</Text>
+                            </ListItem>
+                            {pwContainsUpperCase
+                                ? <Checkmark20Filled style={{ color: 'green' }} />
+                                : <Dismiss20Filled style={{ color: 'red' }} /> }
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'row' }}>
+                            <ListItem>
+                                <Text style={{ fontSize: '0.9em' }}>At least one lower case letter</Text>
+                            </ListItem>
+                            {pwContainsLowerCase
+                                ? <Checkmark20Filled style={{ color: 'green' }}  />
+                                : <Dismiss20Filled style={{ color: 'red' }} /> }
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'row' }}>
+                            <ListItem>
+                                <Text style={{ fontSize: '0.9em' }}>At least one number</Text>
+                            </ListItem>
+                            {pwContainsNumber
+                                ? <Checkmark20Filled style={{ color: 'green' }}  />
+                                : <Dismiss20Filled style={{ color: 'red' }} /> }
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'row' }}>
+                            <ListItem>
+                                <Text style={{ fontSize: '0.9em' }}>At least one special character (@, %, :, +, !, #, $, ?, ~, _, -)</Text>
+                            </ListItem>
+                            {pwContainsSpecialCharacter
+                                ? <Checkmark20Filled style={{ color: 'green' }}  />
+                                : <Dismiss20Filled style={{ color: 'red' }} /> }
+                        </div>
+                    </List>
+
                     <Field label={"Password"} validationMessage={errors.password?.message}
                         style={{ marginBottom: "1em" }}>
                         <Input
                             {...register("password")}
                             type="password"
                             id="password"
-                            placeholder="Password">
+                            placeholder="Password"
+                            onChange={onPasswordChange}>
                         </Input>
                     </Field>
 
