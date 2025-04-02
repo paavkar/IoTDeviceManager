@@ -131,12 +131,6 @@ namespace IoTDeviceManager.server.Controllers
             var accessToken = Request.Cookies["auth_token"];
             var refreshToken = Request.Cookies["refresh_token"];
 
-            if (string.IsNullOrEmpty(accessToken) && string.IsNullOrEmpty(refreshToken))
-            {
-                Response.Cookies.Delete("auth_token");
-                Response.Cookies.Delete("refresh_token");
-            }
-
             if (!string.IsNullOrEmpty(accessToken))
             {
                 ClaimsPrincipal principal = tokenService.GetPrincipalFromExpiredToken(accessToken);
