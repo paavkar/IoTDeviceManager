@@ -62,7 +62,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequireUppercase = true;
-    options.Password.RequiredLength = 6;
+    options.Password.RequiredLength = 8;
     options.Password.RequiredUniqueChars = 1;
 
     // Lockout settings.
@@ -104,7 +104,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowLocalhost");
 
-app.UseHttpsRedirection();
+app.UseWhen(context =>
+{
+    return !context.Request.Headers.ContainsKey("X-Arduino");
+}, app =>
+{
+    app.UseHttpsRedirection();
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

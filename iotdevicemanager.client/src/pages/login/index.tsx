@@ -39,7 +39,7 @@ export const SignIn = () => {
             }
             if (response.ok) {
                 reset()
-                window.location.href = "/angular/";
+                window.location.href = "/angular/devices";
             }
         }
 
