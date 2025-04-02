@@ -25,7 +25,7 @@ function App() {
         if (response.ok) {
           //const userData = await response.json();
           setIsAuth(true)
-          window.location.href = '/angular/';
+          window.location.href = '/angular/devices';
         } else {
           //const error = await response.json();
           setIsAuth(false)
