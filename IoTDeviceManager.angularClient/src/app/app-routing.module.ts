@@ -4,7 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { DevicesComponent } from './pages/devices/devices.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'devices', pathMatch: 'full'  },
+  { path: '', redirectTo: '/devices', pathMatch: 'full'  },
   { path: 'devices', component: DevicesComponent, data: { title: 'IDM | Devices'} },
 ];
 
