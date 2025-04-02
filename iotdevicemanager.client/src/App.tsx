@@ -9,7 +9,7 @@ function App() {
 
   function RedirectToAngular() {
     useEffect(() => {
-      window.location.href = '/angular/';
+      window.location.href = '/angular';
     }, []);
   
     return null;
@@ -25,7 +25,7 @@ function App() {
         if (response.ok) {
           //const userData = await response.json();
           setIsAuth(true)
-          window.location.href = '/angular/devices';
+          window.location.href = '/angular';
         } else {
           //const error = await response.json();
           setIsAuth(false)
