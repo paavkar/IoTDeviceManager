@@ -66,7 +66,9 @@ export class AppComponent implements OnInit {
 
         if (this.user == null ||
           (this.user != null && currentTime > this.user?.tokenInfo.refreshTokenExpiresAt)) {
-          window.location.href = '/';
+            this.store.dispatch(UserActions.logout())
+            this.store.dispatch(DevicesActions.unloadDevices())
+            window.location.href = '/';
         }
         else if (currentTime > this.user.tokenInfo.accessTokenExpiresAt
             && currentTime < this.user.tokenInfo.refreshTokenExpiresAt) {
@@ -77,9 +79,15 @@ export class AppComponent implements OnInit {
                 this.user = response.body;
               }
               else {
-                this.store.dispatch(UserActions.logout())
-                this.store.dispatch(DevicesActions.unloadDevices())
-                window.location.href = '/';
+                this.dataService.logout().subscribe(
+                  (response: HttpResponse<string>) => {
+                    if (response.ok) {
+                      this.store.dispatch(UserActions.logout())
+                      this.store.dispatch(DevicesActions.unloadDevices())
+                      window.location.href = '/';
+                    }
+                  }
+                )
               }
             }
           )

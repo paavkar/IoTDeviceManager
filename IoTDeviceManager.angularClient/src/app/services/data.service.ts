@@ -23,6 +23,10 @@ export class DataService {
     return this.http.post<User>(`${this.authEndpoint}/refresh`, null, { withCredentials: true, observe: 'response' });
   }
 
+  logout(): Observable<HttpResponse<string>> {
+    return this.http.post<string>(`${this.authEndpoint}/logout`, null, { withCredentials: true, observe: 'response' })
+  }
+
   postDevice(device: Device): Observable<Device> {
     return this.http.post<Device>(`${this.devicesEndpoint}/create`, device, { withCredentials: true });
   }
