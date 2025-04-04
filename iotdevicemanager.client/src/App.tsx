@@ -3,39 +3,38 @@ import { Navigate, createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import { SignIn } from './pages/login';
 import { Register } from './pages/register';
+import { UserLocalStorage } from './types';
 
 function App() {
   const [isAuth, setIsAuth] = useState(false)
 
   function RedirectToAngular() {
     useEffect(() => {
-      window.location.href = '/angular';
+      window.location.href = '/angular/';
     }, []);
   
     return null;
   }
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const userJson = localStorage.getItem('user');
+    const currentTime = new Date();
+    if (userJson) {
       try {
-        const response = await fetch('/api/Auth/me', {
-          credentials: 'include',
-        });
-      
-        if (response.ok) {
-          //const userData = await response.json();
-          setIsAuth(true)
-          window.location.href = '/angular';
+        const user: UserLocalStorage = JSON.parse(userJson);
+        if (currentTime < new Date(user.data.tokenInfo.refreshTokenExpiresAt)) {
+          setIsAuth(true);
+          window.location.href = '/angular/';
         } else {
-          //const error = await response.json();
-          setIsAuth(false)
+          localStorage.clear()
+          setIsAuth(false);
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error);
+        setIsAuth(false);
       }
+    } else {
+      setIsAuth(false);
     }
-
-    fetchUserProfile()
   }, [])
 
   const router = createBrowserRouter([

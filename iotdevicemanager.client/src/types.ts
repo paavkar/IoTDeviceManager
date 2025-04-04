@@ -19,6 +19,12 @@ export interface TokenInfo {
     refreshTokenExpiresIn: number;
 }
 
+export interface UserLocalStorage {
+    data: User;
+    loading: boolean;
+    error: string;
+}
+
 export interface User {
     id: string;
     userName: string;
