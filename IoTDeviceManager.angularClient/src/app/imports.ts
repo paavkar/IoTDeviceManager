@@ -99,11 +99,11 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DrawerModule } from 'primeng/drawer';
-
-
+import { DropdownModule } from 'primeng/dropdown';
 
 @NgModule({
     imports: [
+        DropdownModule,
         AvatarModule,
         AvatarGroupModule,
         AnimateOnScrollModule,
@@ -206,6 +206,7 @@ import { DrawerModule } from 'primeng/drawer';
         OverlayBadgeModule,
     ],
       exports: [
+        DropdownModule,
         TabsModule,
         AvatarModule,
         AvatarGroupModule,

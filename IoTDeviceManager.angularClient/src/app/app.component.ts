@@ -36,7 +36,8 @@ export class AppComponent implements OnInit {
   user: User | null = null;
   tile = 'IDM';
   year = new Date().getFullYear();
-  menuItems: MenuItem[] | undefined;
+  mainMenuItems: MenuItem[] | undefined;
+  userMenuItems: MenuItem[] | undefined;
 
   private dataService = inject(DataService)
 
@@ -55,10 +56,6 @@ export class AppComponent implements OnInit {
     .subscribe(data => {
       this.titleService.setTitle(data['title'] || 'IDM');
     });
-
-    this.menuItems = [
-      { label: 'Devices', routerLink: '/devices', icon: 'pi pi-home' }
-    ]
 
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
@@ -104,6 +101,29 @@ export class AppComponent implements OnInit {
         }
       }
     })
+
+    this.userMenuItems = [
+      {
+        label: this.user?.userName,
+        icon: 'pi pi-user',
+        items: [
+          {
+            label: 'Profile',
+            icon: 'pi pi-user'
+          },
+          {
+            label: 'Logout',
+            icon: 'pi pi-sign-out',
+            command: () => {
+              this.dataService.logout();
+              this.store.dispatch(UserActions.logout())
+              this.store.dispatch(DevicesActions.unloadDevices())
+              window.location.href = '/';
+            }
+          }
+        ]
+      }
+    ]
   }
 
   toggleDarkMode() {

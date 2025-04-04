@@ -1,5 +1,4 @@
 <style>
-
   @media screen and (max-width: 650px) {
     .content {
       flex-direction: column;
@@ -14,17 +13,32 @@
     }
   }
 </style>
+
 <div class="min-h-screen flex flex-col">
-  <p-menubar class="flex h-14 pl-10 items-center space-x-2 bg-gray-800" [model]="menuItems"></p-menubar>
-  
+  <div class="flex h-[50px] space-x-2 bg-gray-800 sticky z-[1] items-center">
+    <div class="flex ml-[20px] space-x-20 items-center">
+      <div class="flex gap-1 items-center">
+        <i class="pi pi-home text-white text-xl"></i>
+        <a class="text-white text-xl" routerLink="/devices">Devices</a>
+      </div>
+    </div>
+
+    <div class="flex justify-end flex-grow">
+      <div class="flex mr-[20px]">
+        <p-menu #menu [model]="userMenuItems" [popup]="true" />
+        <p-button (click)="menu.toggle($event)" icon="pi pi-user"/>
+      </div>
+    </div>
+  </div>
+ 
   <div class="flex-grow">
     <router-outlet></router-outlet>
   </div>
 
-  <footer class="bg-gray-800 text-white py-4">
+  <footer class="bg-gray-800 text-white pt-4 sticky z-[1]">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2">
-        <span>©{{ year }} IDM Paavo Karppinen</span>
+        <span>©{{ year }} IDM | Paavo Karppinen</span>
       </div>
 
       <div class="flex items-center space-x-2">
