@@ -23,7 +23,7 @@ namespace IoTDeviceManager.server.Controllers
             string userId = result.UserId;
             IEnumerable<Device> devices = await deviceService.GetDevicesAsync(userId);
 
-            return Ok(devices);
+            return Ok(new { Devices = devices});
         }
 
         [HttpPost("create")]

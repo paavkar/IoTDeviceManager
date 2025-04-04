@@ -38,3 +38,8 @@ export interface DeviceApiResponse {
     message: string;
     device: Device;
 }
+
+export interface DevicesApiResponse {
+    message: string;
+    devices: Device[];
+}

@@ -5,7 +5,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 
-import { Device, DeviceApiResponse, User } from '../../../types';
+import { Device, DeviceApiResponse, DevicesApiResponse, User } from '../../../types';
 import * as DevicesSelector from '../../state/devices.selector';
 import * as DevicesActions from '../../state/devices.actions';
 import * as UserActions from '../../state/user.actions';
@@ -44,11 +44,13 @@ export class DevicesComponent implements OnInit {
   ngOnInit(): void {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        this.store.select(UserSelector.selectCurrentUser).subscribe(
-          (user) => {
-            this.user = user;
-          }
-        )
+        if (this.user == null) {
+          this.store.select(UserSelector.selectCurrentUser).subscribe(
+            (user) => {
+              this.user = user;
+            }
+          )
+        }
       }
     })
   }
@@ -69,5 +71,16 @@ export class DevicesComponent implements OnInit {
     this.newDeviceName = "";
 
     this.createDeviceVisible = false;
+  }
+
+  refreshDevices(): void {
+    this.dataService.fetchUserDevices().subscribe(
+      (response: HttpResponse<DevicesApiResponse>) => {
+        if (response.ok && response.body) {
+          this.store.dispatch(DevicesActions.loadDevicesSuccess({ devices: response.body.devices }))
+          this.devices = response.body.devices
+        }
+      }
+    )
   }
 }
