@@ -64,14 +64,24 @@ export class AppComponent implements OnInit {
       if (event instanceof NavigationEnd) {
         let currentTime = new Date();
 
-        if (this.user == null ||
-          (this.user != null && currentTime > this.user?.tokenInfo.refreshTokenExpiresAt)) {
+        if (this.user == null) {
+          this.dataService.fetchUser().subscribe(
+            (response: HttpResponse<User>) => {
+              if (response.ok && response.body) {
+                this.store.dispatch(UserActions.loadUserSuccess({ user: response.body }))
+                this.user = response.body
+              }
+            }
+          )
+        }
+
+        if (this.user != null && currentTime > this.user?.tokenInfo.refreshTokenExpiresAt) {
             this.store.dispatch(UserActions.logout())
             this.store.dispatch(DevicesActions.unloadDevices())
             window.location.href = '/';
         }
-        else if (currentTime > this.user.tokenInfo.accessTokenExpiresAt
-            && currentTime < this.user.tokenInfo.refreshTokenExpiresAt) {
+        else if (currentTime > this.user!.tokenInfo.accessTokenExpiresAt
+            && currentTime < this.user!.tokenInfo.refreshTokenExpiresAt) {
           this.dataService.refreshLogin().subscribe(
             (response: HttpResponse<User>) => {
               if (response.ok && response.body) {
