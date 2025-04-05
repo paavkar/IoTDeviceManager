@@ -49,6 +49,8 @@ The JWT secret key (Jwt:Key) needs to be at least 256 bits long.
 
 ### Class Diagrams
 
+These classes are saved on the SQL Server database, with the attributes that are displayed.
+
 ```mermaid
 classDiagram
 IdentityUser <|-- ApplicationUser
@@ -97,6 +99,8 @@ class Device {
     +List~Sensor~ Sensors
 }
 
+note for Device "Sensors are not saved on the database. They are used only for returning data."
+
 class Sensor {
     +String Id
     +bool IsOnline
@@ -104,10 +108,76 @@ class Sensor {
     +String MeasurementType
     +String Unit
     +String? Name
+    +double LatestReading
 
     +String DeviceSerialNumber
 }
 ```
+
+A better approach for data storage would be to at least save the device information on a document-based
+database such as Azure Cosmos DB for NoSQL. As Identity doesn't inherently support it, user accounts could
+still be stored on SQL Server database. When using this combination, the following structure could be used.
+
+```mermaid
+classDiagram
+
+class Device {
+    +String Id
+    +bool IsOnline
+    +DateTimeOffset? LastConnectionTime
+    +String Name
+    +String SerialNumber
+    +String UserId
+
+    +List~Sensor~ Sensors
+}
+
+class Sensor {
+    +bool IsOnline
+    +DateTimeOffset? LastConnectionTime
+    +String? Name
+    +List~SensorReading~ LatestReadings
+
+    +String DeviceSerialNumber
+}
+
+class SensorReading {
+    +String MeasurementType
+    +String Unit
+    +double Reading
+}
+```
+
+This would create the following JSON-document on the database:
+
+```
+"id": <STRING_VALUE>,
+"isOnline": <FALSE_OR_TRUE>,
+"lastConnectionTime": <DateTimeOffset_OF_LATEST_CONNECTION>,
+"name": <GIVEN_NAME_FOR_THE_DEVICE_BY_USER>,
+"serialNumber": <GENERATED_SERIALNUMBER>,
+"userId": <ID_OF_THE_USER_WHO_CREATED>,
+"sensors": [
+    {
+        "isOnline": <FALSE_OR_TRUE>,
+        "lastConnectionTime": <DateTimeOffset_OF_LATEST_SENSOR_CONNECTION>,
+        "name": <NAME_OF_THE_SENSOR_FROM_DEVICE_SOFTWARE>,
+        "latestReadings": [
+            {
+                "measurementType": <TYPE_OF_MEASUREMENT>,
+                "unit": <UNIT_OF_MEASUREMENT>,
+                "reading": <READING_FROM_SENSOR>
+            }
+        ]
+    },...
+]
+```
+
+This kind of setup would allow easier packaging of devices and its sensors. Multiple sensors
+are possible with SQL Server, but the benefit of this is to have one sensor for all of the types
+of data it measures. For example, an SHT-sensor measures both temperature and humidity, in this
+setup, you can save the different form of measurements in the latestReadings array for that
+particular sensor.
 
 ### State Diagrams
 
@@ -159,4 +229,37 @@ stateDiagram-v2
 
         /devices --> /[id]
     }
+```
+
+## App Usage
+
+To use the application, you first need to register, and then login. After logging in, you can create
+a device with a name. Creating a device saves a device with your given name, and a serial number is
+generated for it. Your devices are displayed in the devices page.
+
+To send data from your IoT device, you need the serial number of your created device. Sending data is based on the
+different sensors and what they measure. As an example, if your device has an SHT-sensor that measures
+both temperature and humidity, these measurement types would count as different sensors.
+
+You can see an example of how to send data using an Arduino-based board with different sensors here:
+[GitHub: EmbeddedProjects](https://github.com/paavkar/EmbeddedProjects/blob/main/IoTServices/src/main.cpp).
+
+To test the API locally, you send the request to ``<APPLICATION_HOST_IP>/api/Device/<DEVICE_SERIAL_NUMBER>``.
+Depending on your embedded setup, your configuration could differ. If you use similar setup with ArduinoHttpClient
+as I have used (see link), you should have minimal issues. NOTE on ArduinoHttpClient: you don't need to manually add
+http:// before the IP.
+
+The API expects a request body of following key-value pairs:
+```
+name: <YOUR_NAME_FOR_THE_SENSOR>,
+measurementType: <WHAT_IS_MEASURED>,
+unit: <UNIT_OF_MEASUREMENT>,
+latestReading: <THE_LATEST_READING_FROM_SENSOR>
+```
+The following is an example of values:
+```
+name: shtc3_temp,
+measurementType: Temperature,
+unit: C,
+latestReading: 23.1
 ```
