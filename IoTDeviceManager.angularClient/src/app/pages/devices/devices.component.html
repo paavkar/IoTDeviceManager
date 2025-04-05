@@ -8,7 +8,7 @@
             <ng-template #caption>
                 <div class="flex p-1 items-center justify-between">
                     <span class="text-xl font-semibold">Devices</span>
-                    <p-button class="mr-4 p-1" icon="pi pi-refresh" [rounded]="true" [raised]="true" />
+                    <p-button class="mr-4 p-1" icon="pi pi-refresh" [rounded]="true" [raised]="true" (click)="refreshDevices()" />
                 </div>
             </ng-template>
             <ng-template #header>
@@ -24,8 +24,8 @@
                 <tr>
                     <td>{{ device.name }}</td>
                     <td>{{ device.serialNumber }}</td>
-                    <td>{{ device.isOnline }}</td>
-                    <td>{{ device.lastConnectionTime }}</td>
+                    <td><i [ngStyle]="{color: (device.isOnline) ? 'green' : 'red'}" class="pi pi-circle-on"></i></td>
+                    <td>{{ device.lastConnectionTime | date:'medium' }}</td>
                     <td>{{ device.sensors.length }}</td>
                 </tr>
             </ng-template>
