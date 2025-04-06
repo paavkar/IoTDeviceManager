@@ -12,12 +12,37 @@ services:
             - db_data:/var/opt/mssql
         networks:
             - app_network
+    cosmosdb:
+        image: "mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest"
+        container_name: cosmosdb-idm
+        ports:
+            - "8081:8081"
+            - "8082:8082"
+        volumes:
+            - cosmosdb_data:/data/cosmosdb
+        networks:
+            - app_network
+        tty: true
+        restart: always
+        environment:
+            - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=10
+            - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=true
+        healthcheck:
+            test: ["CMD", "curl", "-f", "https://localhost:8081/_explorer/emulator.pem"]
+            interval: 5s
+            timeout: 10s
+            retries: 5
+
 
     webapi:
         depends_on:
             - db
+            - cosmosdb
         networks:
             - app_network
+        environment:
+            - AZURE_IOT_HUB_CONNECTION_STRING=${AZURE_IOT_HUB_CONNECTION_STRING}
+            - AZURE_IOT_SERVICE_CONNECTION_STRING=${AZURE_IOT_SERVICE_CONNECTION_STRING}
   
     react_frontend:
         depends_on:
@@ -55,3 +80,4 @@ networks:
 
 volumes:
   db_data:
+  cosmosdb_data:
