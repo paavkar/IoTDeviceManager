@@ -40,7 +40,11 @@ namespace IoTDeviceManager.server.CosmosDB
 
             if (itemResponse.StatusCode == HttpStatusCode.Created)
             {
-                await azureIotService.CreateDeviceAsync(serialNumber);
+                var result = await azureIotService.CreateDeviceAsync(serialNumber);
+                if (result.Succeeded && !string.IsNullOrEmpty(device.UserId))
+                {
+                    await azureIotService.UpdateDeviceTwinUserTagAsync(serialNumber, device.UserId!);
+                }
                 return new { Created = true, Device = itemResponse.Resource };
             }
             else
