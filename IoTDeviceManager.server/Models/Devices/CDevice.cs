@@ -5,7 +5,7 @@ namespace IoTDeviceManager.server.Models.Devices
     public class CDevice
     {
         [JsonProperty(PropertyName = "id")]
-        public string Id { get; set; }
+        public string? Id { get; set; }
         [JsonProperty(PropertyName = "isOnline")]
         public bool IsOnline { get; set; } = false;
         [JsonProperty(PropertyName = "lastConnectionTime")]
@@ -18,6 +18,8 @@ namespace IoTDeviceManager.server.Models.Devices
         public string? UserId { get; set; }
         [JsonProperty(PropertyName = "partitionKey")]
         public string? PartitionKey { get; set; } = "Devices";
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; } = "Device";
         [JsonProperty(PropertyName = "sensors")]
         public List<CSensor> Sensors { get; set; } = [];
     }

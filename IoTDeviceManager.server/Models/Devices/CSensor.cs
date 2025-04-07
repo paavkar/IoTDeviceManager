@@ -9,7 +9,7 @@ namespace IoTDeviceManager.server.Models.Devices
         [JsonProperty(PropertyName = "lastConnectionTime")]
         public DateTimeOffset? LastConnectionTime { get; set; }
         [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
         [JsonProperty(PropertyName = "latestReadings")]
         public List<CSensorReading> LatestReadings { get; set; } = [];
     }

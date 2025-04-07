@@ -4,11 +4,11 @@ import { Subscription } from 'rxjs';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
+import { filter, map, mergeMap } from 'rxjs/operators';
 
-import { Device, DeviceApiResponse, DevicesApiResponse, User } from '../../../types';
+import { CDevice, DeviceApiResponse, DevicesApiResponse, User } from '../../../types';
 import * as DevicesSelector from '../../state/devices.selector';
 import * as DevicesActions from '../../state/devices.actions';
-import * as UserActions from '../../state/user.actions';
 import { DataService } from '../../services/data.service';
 import * as UserSelector from '../../state/user.selector';
 
@@ -20,25 +20,30 @@ import * as UserSelector from '../../state/user.selector';
   styleUrl: './devices.component.css'
 })
 export class DevicesComponent implements OnInit {
-  devices: Device[] = [];
+  devices: CDevice[] = [];
   subscription: Subscription;
   createDeviceVisible: boolean = false;
   newDeviceName: string = "";
-  user: User | undefined | null;
+  user: User | null = null;
   
   private dataService = inject(DataService)
-  private devicesEndpoint = '/api/Device';
+  private devicesEndpoint = '/api/v2/Device';
 
   constructor(private store: Store, private http: HttpClient, private router: Router) {
     this.subscription = this.store
       .pipe(select(DevicesSelector.getDevices))
       .subscribe((devices) => {
-        if (!devices || devices.length === 0) {
+        if (!devices) {
           this.store.dispatch(DevicesActions.loadDevices());
         } else {
           this.devices = devices;
         }
       });
+    store.select(UserSelector.selectCurrentUser).subscribe(
+      (user) => {
+        this.user = user;
+      }
+    )
   }
   
   ngOnInit(): void {
@@ -56,7 +61,7 @@ export class DevicesComponent implements OnInit {
   }
 
   saveDevice(): void {
-    let device: Device = {
+    let device: CDevice = {
       name: this.newDeviceName,
       userId: this.user?.id
     }

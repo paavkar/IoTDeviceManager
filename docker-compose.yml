@@ -27,12 +27,6 @@ services:
         environment:
             - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=10
             - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=true
-        healthcheck:
-            test: ["CMD", "curl", "-f", "https://localhost:8081/_explorer/emulator.pem"]
-            interval: 5s
-            timeout: 10s
-            retries: 5
-
 
     webapi:
         depends_on:
@@ -43,6 +37,7 @@ services:
         environment:
             - AZURE_IOT_HUB_CONNECTION_STRING=${AZURE_IOT_HUB_CONNECTION_STRING}
             - AZURE_IOT_SERVICE_CONNECTION_STRING=${AZURE_IOT_SERVICE_CONNECTION_STRING}
+            - COSMOS_DB_CONNECTION_STRING=${COSMOS_DB_CONNECTION_STRING}
   
     react_frontend:
         depends_on:

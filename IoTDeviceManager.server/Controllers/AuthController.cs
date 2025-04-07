@@ -1,4 +1,5 @@
-﻿using IoTDeviceManager.server.Models.Auth;
+﻿using Asp.Versioning;
+using IoTDeviceManager.server.Models.Auth;
 using IoTDeviceManager.server.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,8 @@ using System.Security.Claims;
 
 namespace IoTDeviceManager.server.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class AuthController(
         UserManager<ApplicationUser> userManager,

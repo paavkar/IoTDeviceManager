@@ -7,25 +7,45 @@ namespace IoTDeviceManager.server.CosmosDB
         public CosmosClient CosmosClient { get; set; }
         public string DatabaseName { get; set; }
 
-        public CosmosDbFactory()
+        public CosmosDbFactory(IConfiguration configuration)
         {
-            DatabaseName = Environment.GetEnvironmentVariable("COSMOSDB_DATABASE") ?? "IoTDeviceManager";
-            var account = Environment.GetEnvironmentVariable("COSMOSDB_ENDPOINT")
+            DatabaseName = configuration["COSMOSDB_DATABASE"] ?? "iot-device-manager";
+            var account = configuration["COSMOSDB_ENDPOINT"]
                              ?? "https://localhost:8081"; 
-            var key = Environment.GetEnvironmentVariable("COSMOSDB_KEY")
+            var key = configuration["COSMOSDB_KEY"]
                          ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+            var connectionString = configuration["COSMOS_DB_CONNECTION_STRING"];
+            var environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "Production";
 
             var serializationOptions = new CosmosSerializationOptions
             {
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase,
             };
 
-            CosmosClient = new CosmosClient(account, key, new CosmosClientOptions()
+            if (!environment.Equals("Development"))
             {
-                SerializerOptions = serializationOptions
-            });
+                CosmosClient = new(account, key, new CosmosClientOptions()
+                {
+                    SerializerOptions = serializationOptions,
+                    HttpClientFactory = () =>
+                    {
+                        var handler = new HttpClientHandler()
+                        {
+                            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                        };
+                        return new HttpClient(handler);
+                    }
+                });
 
-            InitializeDatabase().GetAwaiter().GetResult();
+                InitializeDatabase().GetAwaiter().GetResult();
+            }
+            else 
+            {
+                CosmosClient = new(connectionString, new CosmosClientOptions()
+                {
+                    SerializerOptions = serializationOptions
+                });
+            }
         }
 
         public async Task InitializeDatabase()
@@ -34,7 +54,7 @@ namespace IoTDeviceManager.server.CosmosDB
 
             var database = CosmosClient.GetDatabase(DatabaseName);
 
-            await database.CreateContainerIfNotExistsAsync(id: "Devices", partitionKeyPath: "/partitionKey");
+            await database.CreateContainerIfNotExistsAsync(id: "devices", partitionKeyPath: "/partitionKey");
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace IoTDeviceManager.server.Services
 {
-    public class AzureIoTService
+    public class AzureIoTService : IAzureIoTService
     {
         private readonly string _registryConnectionString = Environment.GetEnvironmentVariable("AZURE_IOT_HUB_CONNECTION_STRING")!;
         private readonly string _serviceConnectionString = Environment.GetEnvironmentVariable("AZURE_IOT_SERVICE_CONNECTION_STRING")!;

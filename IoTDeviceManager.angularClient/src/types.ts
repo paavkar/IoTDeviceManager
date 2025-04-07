@@ -34,12 +34,35 @@ export interface Device {
     sensors?: Sensor[];
 }
 
+export interface SensorReading {
+    measurementType: string;
+    unit: string;
+    reading: number;
+}
+
+export interface CSensor {
+    isOnline: boolean;
+    lastConnectionTime: Date;
+    name: string;
+    latestReadings: SensorReading[];
+}
+
+export interface CDevice {
+    id?: string;
+    isOnline?: boolean;
+    lastConnectionTime?: Date;
+    name: string;
+    serialNumber?: string;
+    userId?: string;
+    sensors?: CSensor[];
+}
+
 export interface DeviceApiResponse {
     message: string;
-    device: Device;
+    device: CDevice;
 }
 
 export interface DevicesApiResponse {
     message: string;
-    devices: Device[];
+    devices: CDevice[];
 }

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using IoTDeviceManager.server.CosmosDB;
 using IoTDeviceManager.server.Data;
 using IoTDeviceManager.server.Models.Auth;
@@ -79,7 +80,17 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddApiVersioning(options =>
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+}).AddMvc();
+
 builder.Services.AddSingleton<CosmosDbFactory>();
+builder.Services.AddScoped<IAzureIoTService, AzureIoTService>();
 builder.Services.AddScoped<ICosmosDbService, CosmosDbService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
