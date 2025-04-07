@@ -117,6 +117,19 @@ namespace IoTDeviceManager.server.CosmosDB
             return devices;
         }
 
-        public async Task<bool> UpdateDeviceAsync(CDevice device) => throw new NotImplementedException();
+        public async Task<bool> UpdateDeviceAsync(CDevice device)
+        {
+            var deviceResponse = await DevicesContainer.PatchItemAsync<CDevice>(
+                device.Id!,
+                new PartitionKey(device.PartitionKey),
+                new[]
+                {
+                    PatchOperation.Replace("/isOnline", device.IsOnline),
+                    PatchOperation.Replace("/lastConnectionTime", device.LastConnectionTime),
+                    PatchOperation.Replace("/sensors", device.Sensors)
+                });
+
+            return deviceResponse.Equals(HttpStatusCode.OK);
+        }
     }
 }

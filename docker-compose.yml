@@ -18,8 +18,14 @@ services:
         ports:
             - "8081:8081"
             - "8082:8082"
+            - "10250:10250"
+            - "10251:10251"
+            - "10252:10252"
+            - "10253:10253"
+            - "10254:10254"
+            - "10255:10255"
         volumes:
-            - cosmosdb_data:/data/cosmosdb
+            - cosmosdb_data:/tmp/cosmos/appdata
         networks:
             - app_network
         tty: true

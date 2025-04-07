@@ -22,19 +22,16 @@ namespace IoTDeviceManager.server.CosmosDB
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase,
             };
 
-            if (!environment.Equals("Development"))
+            if (environment.Equals("Development"))
             {
                 CosmosClient = new(account, key, new CosmosClientOptions()
                 {
                     SerializerOptions = serializationOptions,
-                    HttpClientFactory = () =>
+                    HttpClientFactory = () => new HttpClient(new HttpClientHandler()
                     {
-                        var handler = new HttpClientHandler()
-                        {
-                            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-                        };
-                        return new HttpClient(handler);
-                    }
+                        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                    }),
+                    ConnectionMode = ConnectionMode.Gateway,
                 });
 
                 InitializeDatabase().GetAwaiter().GetResult();

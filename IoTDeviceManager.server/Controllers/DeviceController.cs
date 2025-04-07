@@ -171,7 +171,7 @@ namespace IoTDeviceManager.server.Controllers
         }
 
         [HttpPut("{serialNumber}"), MapToApiVersion("1.0")]
-        public async Task<IActionResult> UpdateDevice(string serialNumber, [FromBody]DeviceSensorRequest request)
+        public async Task<IActionResult> UpdateDeviceV1(string serialNumber, [FromBody]DeviceSensorRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.MeasurementType) || string.IsNullOrWhiteSpace(request.Unit))
                 return BadRequest(new { Message = "Name, MeasurementType and Unit are required fields. Make sure you include them in your request." });
@@ -213,6 +213,69 @@ namespace IoTDeviceManager.server.Controllers
                 ? Ok(new { Message = "Device and its sensors updated successfully." })
                 : BadRequest(new { Message = "Something went wrong updating the device and its sensor." +
                     "Make sure the device serial number is correct and sensor name is unique for the device." });
+        }
+
+        [HttpPut("{serialNumber}"), MapToApiVersion("1.0")]
+        public async Task<IActionResult> UpdateDeviceV2(string serialNumber, [FromBody] DeviceSensorRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.MeasurementType) || string.IsNullOrWhiteSpace(request.Unit))
+                return BadRequest(new { Message = "Name, MeasurementType and Unit are required fields. Make sure you include them in your request." });
+
+            CDevice? existingDevice = await cosmosService.GetDeviceAsync(serialNumber);
+
+            if (existingDevice == null)
+                return NotFound(new { Message = "Device not found with given Serial number." });
+
+            existingDevice.IsOnline = true;
+            existingDevice.LastConnectionTime = DateTimeOffset.Now;
+
+            CSensor? existingSensor = existingDevice.Sensors
+                .FirstOrDefault(s => s.Name == request.Name);
+
+            if (existingSensor == null)
+            {
+                existingSensor = new()
+                {
+                    IsOnline = true,
+                    LastConnectionTime = DateTimeOffset.Now,
+                    Name = request.Name,
+                    LatestReadings = [new CSensorReading { MeasurementType = request.MeasurementType, Unit = request.Unit, Reading = request.LatestReading }],
+                };
+                existingDevice.Sensors.Add(existingSensor);
+            }
+            else
+            {
+                existingSensor.IsOnline = true;
+                existingSensor.LastConnectionTime = DateTimeOffset.Now;
+                CSensorReading? existingReading = existingSensor.LatestReadings
+                    .FirstOrDefault(r => r.MeasurementType == request.MeasurementType);
+
+                if (existingReading is null)
+                {
+                    existingReading = new()
+                    {
+                        MeasurementType = request.MeasurementType,
+                        Unit = request.Unit,
+                        Reading = request.LatestReading
+                    };
+                    existingSensor.LatestReadings.Add(existingReading);
+                }
+                else
+                {
+                    existingReading.Reading = request.LatestReading;
+                    existingReading.Unit = request.Unit;
+                }
+            }
+
+            var deviceUpdated = await cosmosService.UpdateDeviceAsync(existingDevice);
+
+            return deviceUpdated
+                ? Ok(new { Message = "Device and its sensors updated successfully." })
+                : BadRequest(new
+                {
+                    Message = "Something went wrong updating the device and its sensor." +
+                    "Make sure the device serial number is correct and sensor name is unique for the device."
+                });
         }
     }
 }
