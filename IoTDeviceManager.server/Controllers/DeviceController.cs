@@ -215,7 +215,7 @@ namespace IoTDeviceManager.server.Controllers
                     "Make sure the device serial number is correct and sensor name is unique for the device." });
         }
 
-        [HttpPut("{serialNumber}"), MapToApiVersion("1.0")]
+        [HttpPut("{serialNumber}"), MapToApiVersion("2.0")]
         public async Task<IActionResult> UpdateDeviceV2(string serialNumber, [FromBody] DeviceSensorRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.MeasurementType) || string.IsNullOrWhiteSpace(request.Unit))

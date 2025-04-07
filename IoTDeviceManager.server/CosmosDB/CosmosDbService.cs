@@ -128,8 +128,8 @@ namespace IoTDeviceManager.server.CosmosDB
                     PatchOperation.Replace("/lastConnectionTime", device.LastConnectionTime),
                     PatchOperation.Replace("/sensors", device.Sensors)
                 });
-
-            return deviceResponse.Equals(HttpStatusCode.OK);
+            
+            return deviceResponse.StatusCode.Equals(HttpStatusCode.OK);
         }
     }
 }
