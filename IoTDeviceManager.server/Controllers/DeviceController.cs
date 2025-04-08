@@ -83,7 +83,7 @@ namespace IoTDeviceManager.server.Controllers
             dynamic created = await deviceService.CreateDeviceAsync(device);
 
             if (created.Created)
-                return Ok(new { Message = "Device created successfully.", Device = created.Device });
+                return CreatedAtRoute(nameof(CreateDeviceV1), new { Message = "Device created successfully.", Device = created.Device });
 
             return BadRequest(new { Message = "Device creation failed. Make sure you are giving the required parameters." });
         }
@@ -121,7 +121,7 @@ namespace IoTDeviceManager.server.Controllers
             dynamic created = await cosmosService.CreateDeviceAsync(device);
 
             if (created.Created)
-                return Ok(new { Message = "Device created successfully.", Device = created.Device });
+                return CreatedAtRoute(nameof(CreateDeviceV2), new { Message = "Device created successfully.", Device = created.Device });
 
             return BadRequest(new { Message = "Device creation failed. Make sure you are giving the required parameters." });
         }

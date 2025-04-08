@@ -22,7 +22,7 @@ export const SignIn = () => {
     const [httpError, setHttpError] = useState("");
 
     async function onSubmit(values: z.infer<typeof Schema>) {
-            var response = await fetch("/api/Auth/login", {
+            var response = await fetch("/api/v1/Auth/login", {
                 method: "POST",
                 body: JSON.stringify(values),
                 headers: {

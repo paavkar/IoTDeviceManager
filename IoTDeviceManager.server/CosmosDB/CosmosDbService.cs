@@ -18,8 +18,6 @@ namespace IoTDeviceManager.server.CosmosDB
 
         public async Task<dynamic> CreateDeviceAsync(CDevice device)
         {
-            if (!string.IsNullOrEmpty(device.UserId))
-                device.PartitionKey = $"Devices-{device.UserId}";
             Guid guid = Guid.CreateVersion7();
             device.Id = guid.ToString();
 
