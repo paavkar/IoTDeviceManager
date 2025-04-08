@@ -17,7 +17,7 @@ export class DataEffects {
       ofType(DevicesActions.loadDevices),
       mergeMap(() =>
         this.dataService.fetchDevices().pipe(
-          map((devices) => DevicesActions.loadDevicesSuccess({ devices })),
+          map((response) => DevicesActions.loadDevicesSuccess({ devices: response.devices })),
           catchError((error) =>
             of(DevicesActions.loadDevicesFailure({ error: error.message }))
           )

@@ -37,7 +37,7 @@ export const Register = () => {
     const [pwLength, setPwLength] = useState(false);
 
     async function onSubmit(values: z.infer<typeof Schema>) {
-        var response = await fetch("/api/Auth/register", {
+        var response = await fetch("/api/v1/Auth/register", {
             method: "POST",
             body: JSON.stringify(values),
             headers: {

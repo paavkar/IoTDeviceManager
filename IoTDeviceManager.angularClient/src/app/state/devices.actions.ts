@@ -1,11 +1,11 @@
 import { createAction, props } from '@ngrx/store';
-import { Device } from '../../types';
+import { CDevice } from '../../types';
 
 export const loadDevices = createAction('[Devices] Load Devices')
 export const unloadDevices = createAction('[Devices] Unload Devices')
 export const loadDevicesSuccess = createAction(
     '[Devices] Load Devices Success',
-    props<{ devices: Device[] }>()
+    props<{ devices: CDevice[] }>()
 )
 export const loadDevicesFailure = createAction(
     '[Devices] Load Devices Failure',
@@ -14,6 +14,6 @@ export const loadDevicesFailure = createAction(
 
 export const addDevice = createAction(
   '[Devices Page] Add Device',
-  props<{ device: Device }>()
+  props<{ device: CDevice }>()
 );
   

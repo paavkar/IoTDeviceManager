@@ -2,17 +2,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Device, DevicesApiResponse, User } from '../../types';
+import { CDevice, DevicesApiResponse, User } from '../../types';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
-  private devicesEndpoint = '/api/Device';
-  private authEndpoint = '/api/Auth';
+  private devicesEndpoint = '/api/v2/Device';
+  private authEndpoint = '/api/v1/Auth';
 
   constructor(private http: HttpClient) {}
 
-  fetchDevices(): Observable<Device[]> {
-    return this.http.get<Device[]>(`${this.devicesEndpoint}/`, { withCredentials: true });
+  fetchDevices(): Observable<DevicesApiResponse> {
+    return this.http.get<DevicesApiResponse>(`${this.devicesEndpoint}/`, { withCredentials: true });
   }
 
   fetchUserDevices(): Observable<HttpResponse<DevicesApiResponse>> {
@@ -31,7 +31,7 @@ export class DataService {
     return this.http.post<string>(`${this.authEndpoint}/logout`, null, { withCredentials: true, observe: 'response' })
   }
 
-  postDevice(device: Device): Observable<Device> {
-    return this.http.post<Device>(`${this.devicesEndpoint}/create`, device, { withCredentials: true });
+  postDevice(device: CDevice): Observable<CDevice> {
+    return this.http.post<CDevice>(`${this.devicesEndpoint}/create`, device, { withCredentials: true });
   }
 }

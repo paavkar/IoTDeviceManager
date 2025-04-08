@@ -157,6 +157,8 @@ This would create the following JSON-document on the database:
 "name": <GIVEN_NAME_FOR_THE_DEVICE_BY_USER>,
 "serialNumber": <GENERATED_SERIALNUMBER>,
 "userId": <ID_OF_THE_USER_WHO_CREATED>,
+"type": <STRING_VALUE>,
+"partitionKey": <STRING_VALUE>,
 "sensors": [
     {
         "isOnline": <FALSE_OR_TRUE>,
@@ -178,6 +180,13 @@ are possible with SQL Server, but the benefit of this is to have one sensor for 
 of data it measures. For example, an SHT-sensor measures both temperature and humidity, in this
 setup, you can save the different form of measurements in the latestReadings array for that
 particular sensor.
+
+The before explained format is now deployed with the v2 API. With this structure, the sensor
+readings are sent to the database via Azure IoT Hub. When the IoT Hub receives telemetry (sensor)
+data, an Azure Function is used to save the data on the database. The Azure Function code is available
+in this repository, and the example of how to communicate with Azure IoT Hub is available at
+[EmbeddedProjects | AzureIoTHub](https://github.com/paavkar/EmbeddedProjects/tree/main/AzureIoTHub).
+The code here is largely the same as Microsoft's example code.
 
 ### State Diagrams
 
@@ -242,9 +251,9 @@ different sensors and what they measure. As an example, if your device has an SH
 both temperature and humidity, these measurement types would count as different sensors.
 
 You can see an example of how to send data using an Arduino-based board with different sensors here:
-[GitHub: EmbeddedProjects](https://github.com/paavkar/EmbeddedProjects/blob/main/IoTServices/src/main.cpp).
+[GitHub | EmbeddedProjects](https://github.com/paavkar/EmbeddedProjects/blob/main/IoTServices/src/main.cpp).
 
-To test the API locally, you send the request to ``<APPLICATION_HOST_IP>/api/Device/<DEVICE_SERIAL_NUMBER>``.
+To test the API locally, you send the request to ``<APPLICATION_HOST_IP>/api/v1/Device/<DEVICE_SERIAL_NUMBER>``.
 Depending on your embedded setup, your configuration could differ. If you use similar setup with ArduinoHttpClient
 as I have used (see link), you should have minimal issues. NOTE on ArduinoHttpClient: you don't need to manually add
 http:// before the IP.
@@ -263,3 +272,4 @@ measurementType: Temperature,
 unit: C,
 latestReading: 23.1
 ```
+If you want to use the newer Azure Cosmos DB based solution, send the request to the v2 endpoint.
