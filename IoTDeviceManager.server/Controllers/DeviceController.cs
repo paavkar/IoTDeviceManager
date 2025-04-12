@@ -167,7 +167,7 @@ namespace IoTDeviceManager.server.Controllers
 
             return device.UserId != userId
                 ? Unauthorized(new { Message = "You are not authorized to view this device." })
-                : Ok(device);
+                : Ok(new { Device = device });
         }
 
         [HttpPut("{serialNumber}"), MapToApiVersion("1.0")]
