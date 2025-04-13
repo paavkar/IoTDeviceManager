@@ -262,6 +262,7 @@ WebUI->>API: /create
 API-)TokenService: ValidateTokensAsync(string accessToken, string refreshToken)
 TokenService-->>API: Validation info
 alt Token(s) invalid
+    Note over API,WebUI: Result includes error message
     API-->>WebUI: 401 Unauthorized
 else Token(s) valid
     API-)CosmosDbService: CreateDeviceAsync(CDevice device)
@@ -283,13 +284,13 @@ else Token(s) valid
         Note over CosmosDbService,API: contains boolean Created = true, created device
         CosmosDbService-->>API: dynamic
         Note over API,WebUI: Result includes a message<br/> and created device
-        API-->>WebUI: Task<IActionResult>
+        API-->>WebUI: 204 Created
         WebUI-->>User: Created device is added to table
     else Device not created
         Note over CosmosDbService,API: contains boolean Created = false
         CosmosDbService-->>API: dynamic
-        Note over API,WebUI: Contains error message
-        API-->>WebUI: Task<IActionResult>
+        Note over API,WebUI: Result includes error message
+        API-->>WebUI: 400 BadRequest
         WebUI-->>User: Error message is shown
     end
 end
