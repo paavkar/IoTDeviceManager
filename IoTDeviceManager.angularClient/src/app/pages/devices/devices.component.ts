@@ -4,7 +4,6 @@ import { Subscription } from 'rxjs';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter, map, mergeMap } from 'rxjs/operators';
 
 import { CDevice, DeviceApiResponse, DevicesApiResponse, User } from '../../../types';
 import * as DevicesSelector from '../../state/devices.selector';
@@ -25,6 +24,7 @@ export class DevicesComponent implements OnInit {
   createDeviceVisible: boolean = false;
   newDeviceName: string = "";
   user: User | null = null;
+  loading: boolean = false;
   
   private dataService = inject(DataService)
   private devicesEndpoint = '/api/v2/Device';
@@ -79,6 +79,7 @@ export class DevicesComponent implements OnInit {
   }
 
   refreshDevices(): void {
+    this.loading = true;
     this.dataService.fetchUserDevices().subscribe(
       (response: HttpResponse<DevicesApiResponse>) => {
         if (response.ok && response.body) {
@@ -87,5 +88,6 @@ export class DevicesComponent implements OnInit {
         }
       }
     )
+    this.loading = false;
   }
 }

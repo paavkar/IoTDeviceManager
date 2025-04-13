@@ -25,7 +25,7 @@
 
     <div class="flex justify-end flex-grow">
       <div class="flex mr-[20px]">
-        <p-menu #menu [model]="userMenuItems" [popup]="true" />
+        <p-menu #menu [model]="userMenuItems" [popup]="true" class="z-1" />
         <p-button (click)="menu.toggle($event)" icon="pi pi-user"/>
       </div>
     </div>
@@ -35,7 +35,7 @@
     <router-outlet></router-outlet>
   </div>
 
-  <footer class="bg-gray-800 text-white pt-4 sticky">
+  <footer class="bg-gray-800 text-white pt-4 sticky h-[40px]">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2">
         <span>©{{ year }} IDM | Paavo Karppinen</span>

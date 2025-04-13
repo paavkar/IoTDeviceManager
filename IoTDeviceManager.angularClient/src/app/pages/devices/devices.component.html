@@ -1,10 +1,10 @@
 <div class="m-4">
-    <span class="text-3xl font-semibold">My devices</span>
+    <span class="text-[2em] font-semibold">My devices</span>
     <p-button class="ml-4 p-2 rounded-md" aria-label="Add a device"
         label="Add a device" (click)="createDeviceVisible = true" />
     
     <div class="mt-4">
-        <p-table [value]="devices" showGridlines [tableStyle]="{ 'min-width': '60rem' }">
+        <p-table *ngIf="!loading" [value]="devices" showGridlines [tableStyle]="{ 'min-width': '60rem' }">
             <ng-template #caption>
                 <div class="flex p-1 items-center justify-between">
                     <span class="text-xl font-semibold">Devices</span>
@@ -18,6 +18,7 @@
                     <th class="text-lg">Online status</th>
                     <th class="text-lg">Last connected</th>
                     <th class="text-lg">Sensor count</th>
+                    <th class="text-lg">Actions</th>
                 </tr>
             </ng-template>
             <ng-template #body let-device>
@@ -26,11 +27,21 @@
                     <td>{{ device.serialNumber }}</td>
                     <td><i [ngStyle]="{color: (device.isOnline) ? 'green' : 'red'}" class="pi pi-circle-on"></i></td>
                     <td>{{ device.lastConnectionTime | date:'medium' }}</td>
-                    <td>{{ device.sensors.length }}</td>
+                    <td>{{ device.sensors.length }}</td>        
+                    <td>
+                        <button
+                            class="p-button p-button-rounded p-button-success"
+                            [routerLink]="['/devices', device.serialNumber]"
+                            title="View Device Details">
+                            <i class="pi pi-eye"></i>
+                        </button>
+                    </td>
                 </tr>
             </ng-template>
             <ng-template #footer>There are {{ devices ? devices.length : 0 }} devices in total.</ng-template>
         </p-table>
+
+        <p-progress-spinner *ngIf="loading" ariaLabel="loading"></p-progress-spinner>
     </div>
     
     <div class="z-1 bg-indigo-800">
