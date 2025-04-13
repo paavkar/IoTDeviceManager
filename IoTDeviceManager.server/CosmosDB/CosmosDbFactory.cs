@@ -22,7 +22,7 @@ namespace IoTDeviceManager.server.CosmosDB
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase,
             };
 
-            if (environment.Equals("Development"))
+            if (!environment.Equals("Development"))
             {
                 CosmosClient = new(account, key, new CosmosClientOptions()
                 {

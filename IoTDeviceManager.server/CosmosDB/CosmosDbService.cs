@@ -79,7 +79,7 @@ namespace IoTDeviceManager.server.CosmosDB
         public async Task<CDevice?> GetDeviceAsync(string serialNumber)
         {
             var getDevicesQuery = new QueryDefinition("SELECT * FROM devices d WHERE d.serialNumber = @SerialNumber")
-                .WithParameter("@SerialNumber", serialNumber);
+                .WithParameter("@SerialNumber", serialNumber.ToUpper());
 
             var devices = await QueryDevicesAsync(getDevicesQuery);
 

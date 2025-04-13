@@ -1,1 +1,47 @@
-<h1>{{ device?.name }}</h1>
+<div *ngIf="deviceLoading" class="flex items-center">
+    <p-progress-spinner [style]="{'width': '50px', 'height': '50px'}" ariaLabel="loading"></p-progress-spinner>
+</div>
+
+<div *ngIf="device" class="m-4">
+    <span class="text-[2em]">{{ device.name }}</span>
+
+    <div class="mt-4 max-w-lg">
+        <p-card header="Device details">
+            <div class="flex flex-col gap-4">
+                <span>Online status: 
+                    <i [ngStyle]="{color: (device.isOnline) ? 'green' : 'red'}" class="pi pi-circle-on ml-2">
+                    </i>
+                </span>
+                <span>Last connected: {{ device.lastConnectionTime | date:'medium' }}</span>
+            </div>
+        </p-card>
+    </div>
+
+    <div class="flex flex-col gap-4 mt-4">
+        <span class="text-[1.5em]">Sensors</span>
+        <span>{{ device.name }} sensors connected: {{ device.sensors?.length }}</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6" *ngFor="let sensor of device.sensors">
+        <p-panel header="{{ sensor.name }}" [toggleable]="true">
+            <div>
+                <span>Online status: 
+                    <i [ngStyle]="{color: (sensor.isOnline) ? 'green' : 'red'}" class="pi pi-circle-on ml-2">
+                    </i>
+                </span><br />
+                <span>Last connected: {{ sensor.lastConnectionTime | date:'medium' }}</span>
+            </div>
+            <div *ngFor="let reading of sensor.latestReadings" class="flex flex-col gap-4 mt-2">
+                <div class="flex flex-col">
+                    <span>Reading type: {{ reading.measurementType }}</span>
+                    <span>Latest reading: {{ reading.reading }} {{ reading.unit }}</span>
+                </div>
+            </div>
+        </p-panel>
+    </div>
+</div>
+
+<div *ngIf="errorMessage" class="flex flex-col flex-grow mt-4 text-center content-center">
+    <span class="text-[2em] font-semibold">{{ statusCodeAndText }}</span><br />
+    <span class="text-[1.17em]">{{ errorMessage }}</span>
+</div>
