@@ -186,7 +186,7 @@ readings are sent to the database via Azure IoT Hub. When the IoT Hub receives t
 data, an Azure Function is used to save the data on the database. The Azure Function code is available
 in this repository, and the example of how to communicate with Azure IoT Hub is available at
 [EmbeddedProjects | AzureIoTHub](https://github.com/paavkar/EmbeddedProjects/tree/main/AzureIoTHub).
-The code here is largely the same as Microsoft's example code.
+The code for IoT Hub communication is largely the same as Microsoft's example code.
 
 ### State Diagrams
 
@@ -238,6 +238,54 @@ stateDiagram-v2
 
         /devices --> /[id]
     }
+```
+
+### Sequence Diagrams
+
+The following diagram is supposed to communicate the flow of Arduino using its sensor(s) to
+take readings and then send the data to Azure IoT Hub, upon which Azure Function detects
+this event and int its function called "Run" updates the device on Azure Cosmos DB for NoSQL.
+User can configure the loop frequency, as in the default is every 5 minutes (current minute % 5 == 0).
+```mermaid
+sequenceDiagram
+participant Arduino
+participant AzureIoTHub as Azure IoT Hub
+participant AzureFunction as Azure Function
+participant CosmosDB as Azure Cosmos DB for NoSQL
+
+loop Every 5 minutes (default)
+    Arduino->>Arduino: Take sensor reading
+    Arduino->>AzureIoTHub: Send Telemetry Data
+end
+activate AzureFunction
+Note over AzureIoTHub,AzureFunction: Azure Function detects the<br/> arrived event on IoT Hub
+AzureIoTHub->>AzureFunction: Detect Telemetry Event
+AzureFunction->>AzureFunction: Run function
+AzureFunction->>CosmosDB: Update Device in Run function
+deactivate AzureFunction
+```
+The following diagram displays the flow of user being on the device page and choosing
+configuration message. The message is sent to the API, which in turn uses a service that
+communicates with Azure IoT Hub to send commands to a device that is registered.
+```mermaid
+sequenceDiagram
+participant User
+participant WebUI as Web UI
+participant API
+participant AzureIoTHubService as Azure IoT Hub Service
+participant AzureIoTHub as Azure IoT Hub
+participant Arduino
+
+User->>WebUI: Perform configuration
+WebUI->>API: Send configuration request
+API-)AzureIoTHubService: SendCommandAsync(string deviceId, string command)
+Note over AzureIoTHubService,AzureIoTHub: The command sent is encoded
+AzureIoTHubService-)AzureIoTHub: SendAsync(string deviceId, string command)
+API-->>WebUI: Send response to UI
+WebUI-->>User: Display message to user 
+AzureIoTHub->>Arduino: Send Command
+Arduino->>Arduino: OnMessageReceived
+Note over Arduino: Process the received message
 ```
 
 ## App Usage
