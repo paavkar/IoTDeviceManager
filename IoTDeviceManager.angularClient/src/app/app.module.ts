@@ -19,6 +19,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { DevicesComponent } from './pages/devices/devices.component';
 import { provideHttpClient } from '@angular/common/http';
+import { SingleDeviceViewComponent } from './pages/single-device-view/single-device-view.component';
 
 export function localStorageSyncReducer(reducer: any): any {
   return localStorageSync({
@@ -32,7 +33,8 @@ export const metaReducers: MetaReducer<any>[] = [localStorageSyncReducer];
 @NgModule({
   declarations: [
     AppComponent,
-    DevicesComponent
+    DevicesComponent,
+    SingleDeviceViewComponent
   ],
   imports: [
     BrowserModule,

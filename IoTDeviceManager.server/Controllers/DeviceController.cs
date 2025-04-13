@@ -163,11 +163,11 @@ namespace IoTDeviceManager.server.Controllers
             CDevice? device = await cosmosService.GetDeviceAsync(serialNumber);
 
             if (device == null)
-                return NotFound(new { Message = "Device not found with given Serial number." });
+                return NotFound(new { Message = "Device not found with given Serial Number. Make sure you have written it correctly." });
 
             return device.UserId != userId
                 ? Unauthorized(new { Message = "You are not authorized to view this device." })
-                : Ok(device);
+                : Ok(new { Device = device });
         }
 
         [HttpPut("{serialNumber}"), MapToApiVersion("1.0")]

@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CDevice, DevicesApiResponse, User } from '../../types';
+import { CDevice, DevicesApiResponse, DeviceApiResponse, User } from '../../types';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
@@ -17,6 +17,10 @@ export class DataService {
 
   fetchUserDevices(): Observable<HttpResponse<DevicesApiResponse>> {
     return this.http.get<DevicesApiResponse>(`${this.devicesEndpoint}/`, { withCredentials: true, observe: 'response' });
+  }
+
+  fetchDevice(serialNumber: string): Observable<HttpResponse<DeviceApiResponse>> {
+    return this.http.get<DeviceApiResponse>(`${this.devicesEndpoint}/${serialNumber}`, { withCredentials: true, observe: 'response' });
   }
 
   fetchUser(): Observable<HttpResponse<User>> {

@@ -107,9 +107,10 @@ namespace IoTHub
                 _logger.LogInformation($"Device {device.serialNumber} found. Updating...");
                 _logger.LogInformation($"Device {device.id} found. Updating...");
 
-                // Update device and sensor data as in your previous logic
+                var dateNow = DateTimeOffset.Now;
+
                 device.isOnline = true;
-                device.lastConnectionTime = DateTimeOffset.Now;
+                device.lastConnectionTime = dateNow;
 
                 Sensor? existingSensor = device.sensors.FirstOrDefault(s => s.name == name);
                 if (existingSensor == null)
@@ -117,7 +118,7 @@ namespace IoTHub
                     existingSensor = new()
                     {
                         isOnline = true,
-                        lastConnectionTime = DateTimeOffset.Now,
+                        lastConnectionTime = dateNow,
                         name = name,
                         latestReadings = readings
                     };
@@ -126,7 +127,7 @@ namespace IoTHub
                 else
                 {
                     existingSensor.isOnline = true;
-                    existingSensor.lastConnectionTime = DateTimeOffset.Now;
+                    existingSensor.lastConnectionTime = dateNow;
 
                     foreach (var sensorReading in readings)
                     {
