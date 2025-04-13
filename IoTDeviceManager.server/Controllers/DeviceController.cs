@@ -6,6 +6,7 @@ using IoTDeviceManager.server.Models.Devices;
 using IoTDeviceManager.server.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace IoTDeviceManager.server.Controllers
 {
@@ -283,7 +284,9 @@ namespace IoTDeviceManager.server.Controllers
         [HttpPost("send-command/{serialNumber}"), MapToApiVersion("2.0")]
         public async Task<IActionResult> SendCommandToDevice(string serialNumber, [FromBody]DeviceCommandRequest request)
         {
-            await azureIoTService.SendCommandAsync(serialNumber, request.Command);
+            var command = JsonConvert.SerializeObject(request);
+
+            await azureIoTService.SendCommandAsync(serialNumber, command);
 
             return Ok(new { Message = "Attempted to send a command to the specified device." });
         }

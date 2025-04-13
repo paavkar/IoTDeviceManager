@@ -1,7 +1,10 @@
-﻿namespace IoTDeviceManager.server.Models
+﻿using System.Data;
+
+namespace IoTDeviceManager.server.Models
 {
     public class DeviceCommandRequest
     {
-        public string Command { get; set; }
+        public CommandType CommandType { get; set; }
+        public int? Value { get; set; }
     }
 }
