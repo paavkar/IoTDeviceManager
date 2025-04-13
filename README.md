@@ -242,6 +242,61 @@ stateDiagram-v2
 
 ### Sequence Diagrams
 
+#### Device Creation flow
+
+The following diagram displays the flow of user creating a device from the Web UI
+
+```mermaid
+sequenceDiagram
+participant User
+participant WebUI as Web UI
+participant API
+participant TokenService
+participant CosmosDbService
+participant DeviceContainer
+participant AzureIoTService as Azure IoT Hub Service
+participant RegistryManager as Azure IoT Hub Registry Manager
+
+User->>WebUI: Perform device creation
+WebUI->>API: /create
+API-)TokenService: ValidateTokensAsync(string accessToken, string refreshToken)
+TokenService-->>API: Validation info
+alt Token(s) invalid
+    API-->>WebUI: 401 Unauthorized
+else Token(s) valid
+    API-)CosmosDbService: CreateDeviceAsync(CDevice device)
+    CosmosDbService-)DeviceContainer: CreateItemAsync(CDevice device, PartitionKey partitionKey)
+    DeviceContainer-->CosmosDbService: ItemResponse<CDevice>
+    alt Device created on Database
+        CosmosDbService-)AzureIoTService: CreateDeviceAsync(string serialNumber)
+        AzureIoTService-)RegistryManager: AddDeviceAsync(Device device)
+        RegistryManager-->>AzureIoTService: Created device
+        Note over AzureIoTService,CosmosDbService: Contains boolean Succeeded = true, Message, Device for successful<br/>Succeeded = false, Message for unsuccessful
+        AzureIoTService-->>CosmosDbService: dynamic
+        alt result.Succeeded && Device.UserId not null
+            CosmosDbService-)AzureIoTService: UpdateDeviceTwinUserTagAsync(string serialNumber, string device.UserId!)
+            AzureIoTService-)RegistryManager: UpdateTwinAsync(string deviceId, string patch, string twin.ETag)
+            RegistryManager-->>AzureIoTService: Twin
+            Note over AzureIoTService,CosmosDbService: Contains boolean Succeeded = true, Message, Tags
+            AzureIoTService-->>CosmosDbService: dynamic
+        end
+        Note over CosmosDbService,API: contains boolean Created = true, created device
+        CosmosDbService-->>API: dynamic
+        Note over API,WebUI: Result includes a message<br/> and created device
+        API-->>WebUI: Task<IActionResult>
+        WebUI-->>User: Created device is added to table
+    else Device not created
+        Note over CosmosDbService,API: contains boolean Created = false
+        CosmosDbService-->>API: dynamic
+        Note over API,WebUI: Contains error message
+        API-->>WebUI: Task<IActionResult>
+        WebUI-->>User: Error message is shown
+    end
+end
+```
+
+#### Arduino sensor measurement -> DB flow
+
 The following diagram is supposed to communicate the flow of Arduino using its sensor(s) to
 take readings and then send the data to Azure IoT Hub, upon which Azure Function detects
 this event and int its function called "Run" updates the device on Azure Cosmos DB for NoSQL.
@@ -264,6 +319,9 @@ AzureFunction->>AzureFunction: Run function
 AzureFunction->>CosmosDB: Update Device in Run function
 deactivate AzureFunction
 ```
+
+#### Cloud to Device message flow
+
 The following diagram displays the flow of user being on the device page and choosing
 configuration message. The message is sent to the API, which in turn uses a service that
 communicates with Azure IoT Hub to send commands to a device that is registered.
@@ -272,15 +330,16 @@ sequenceDiagram
 participant User
 participant WebUI as Web UI
 participant API
-participant AzureIoTHubService as Azure IoT Hub Service
+participant AzureIoTService as Azure IoT Hub Service
 participant AzureIoTHub as Azure IoT Hub
 participant Arduino
 
 User->>WebUI: Perform configuration
-WebUI->>API: Send configuration request
-API-)AzureIoTHubService: SendCommandAsync(string deviceId, string command)
-Note over AzureIoTHubService,AzureIoTHub: The command sent is encoded
-AzureIoTHubService-)AzureIoTHub: SendAsync(string deviceId, string command)
+Note over WebUI,API: Send configuration request
+WebUI->>API: /send-command/{serialNumber}
+API-)AzureIoTService: SendCommandAsync(string deviceId, string command)
+Note over AzureIoTService,AzureIoTHub: The command sent is encoded
+AzureIoTService-)AzureIoTHub: SendAsync(string deviceId, string command)
 API-->>WebUI: Send response to UI
 WebUI-->>User: Display message to user 
 AzureIoTHub->>Arduino: Send Command
