@@ -186,7 +186,7 @@ readings are sent to the database via Azure IoT Hub. When the IoT Hub receives t
 data, an Azure Function is used to save the data on the database. The Azure Function code is available
 in this repository, and the example of how to communicate with Azure IoT Hub is available at
 [EmbeddedProjects | AzureIoTHub](https://github.com/paavkar/EmbeddedProjects/tree/main/AzureIoTHub).
-The code here is largely the same as Microsoft's example code.
+The code for IoT Hub communication is largely the same as Microsoft's example code.
 
 ### State Diagrams
 
@@ -238,6 +238,114 @@ stateDiagram-v2
 
         /devices --> /[id]
     }
+```
+
+### Sequence Diagrams
+
+#### Device Creation flow
+
+The following diagram displays the flow of user creating a device from the Web UI
+
+```mermaid
+sequenceDiagram
+participant User
+participant WebUI as Web UI
+participant API
+participant TokenService
+participant CosmosDbService
+participant DeviceContainer
+participant AzureIoTService as Azure IoT Hub Service
+participant RegistryManager as Azure IoT Hub Registry Manager
+
+User->>WebUI: Perform device creation
+WebUI->>API: /create
+API-)TokenService: ValidateTokensAsync(string accessToken, string refreshToken)
+TokenService-->>API: Validation info
+alt Token(s) invalid
+    Note over API,WebUI: Result includes error message
+    API-->>WebUI: 401 Unauthorized
+else Token(s) valid
+    API-)CosmosDbService: CreateDeviceAsync(CDevice device)
+    CosmosDbService-)DeviceContainer: CreateItemAsync(CDevice device, PartitionKey partitionKey)
+    DeviceContainer-->CosmosDbService: ItemResponse<CDevice>
+    alt Device created on Database
+        CosmosDbService-)AzureIoTService: CreateDeviceAsync(string serialNumber)
+        AzureIoTService-)RegistryManager: AddDeviceAsync(Device device)
+        RegistryManager-->>AzureIoTService: Created device
+        Note over AzureIoTService,CosmosDbService: Contains boolean Succeeded = true, Message, Device for successful<br/>Succeeded = false, Message for unsuccessful
+        AzureIoTService-->>CosmosDbService: dynamic
+        alt result.Succeeded && Device.UserId not null
+            CosmosDbService-)AzureIoTService: UpdateDeviceTwinUserTagAsync(string serialNumber, string device.UserId!)
+            AzureIoTService-)RegistryManager: UpdateTwinAsync(string deviceId, string patch, string twin.ETag)
+            RegistryManager-->>AzureIoTService: Twin
+            Note over AzureIoTService,CosmosDbService: Contains boolean Succeeded = true, Message, Tags
+            AzureIoTService-->>CosmosDbService: dynamic
+        end
+        Note over CosmosDbService,API: contains boolean Created = true, created device
+        CosmosDbService-->>API: dynamic
+        Note over API,WebUI: Result includes a message<br/> and created device
+        API-->>WebUI: 204 Created
+        WebUI-->>User: Created device is added to table
+    else Device not created
+        Note over CosmosDbService,API: contains boolean Created = false
+        CosmosDbService-->>API: dynamic
+        Note over API,WebUI: Result includes error message
+        API-->>WebUI: 400 BadRequest
+        WebUI-->>User: Error message is shown
+    end
+end
+```
+
+#### Arduino sensor measurement -> DB flow
+
+The following diagram is supposed to communicate the flow of Arduino using its sensor(s) to
+take readings and then send the data to Azure IoT Hub, upon which Azure Function detects
+this event and int its function called "Run" updates the device on Azure Cosmos DB for NoSQL.
+User can configure the loop frequency, as in the default is every 5 minutes (current minute % 5 == 0).
+```mermaid
+sequenceDiagram
+participant Arduino
+participant AzureIoTHub as Azure IoT Hub
+participant AzureFunction as Azure Function
+participant CosmosDB as Azure Cosmos DB for NoSQL
+
+loop Every 5 minutes (default)
+    Arduino->>Arduino: Take sensor reading
+    Arduino->>AzureIoTHub: Send Telemetry Data
+end
+activate AzureFunction
+Note over AzureIoTHub,AzureFunction: Azure Function detects the<br/> arrived event on IoT Hub
+AzureIoTHub->>AzureFunction: Detect Telemetry Event
+AzureFunction->>AzureFunction: Run function
+AzureFunction->>CosmosDB: Update Device in Run function
+deactivate AzureFunction
+```
+
+#### Cloud to Device message flow
+
+The following diagram displays the flow of user being on the device page and choosing
+configuration message. The message is sent to the API, which in turn uses a service that
+communicates with Azure IoT Hub to send commands to a device that is registered.
+```mermaid
+sequenceDiagram
+participant User
+participant WebUI as Web UI
+participant API
+participant AzureIoTService as Azure IoT Hub Service
+participant AzureIoTHub as Azure IoT Hub
+participant Arduino
+
+User->>WebUI: Perform configuration
+Note over WebUI,API: Send configuration request
+WebUI->>API: /send-command/{serialNumber}
+API-)AzureIoTService: SendCommandAsync(string deviceId, string command)
+Note over AzureIoTService,AzureIoTHub: The command sent is encoded
+AzureIoTService-)AzureIoTHub: SendAsync(string deviceId, string command)
+API-->>WebUI: Send response to UI
+WebUI-->>User: Display message to user 
+AzureIoTHub->>Arduino: Send Command
+Arduino->>Arduino: OnMessageReceived
+Note over Arduino: Process the received message
 ```
 
 ## App Usage

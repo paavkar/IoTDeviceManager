@@ -1,10 +1,12 @@
 ﻿using Asp.Versioning;
 using IoTDeviceManager.server.CosmosDB;
+using IoTDeviceManager.server.Models;
 using IoTDeviceManager.server.Models.Auth;
 using IoTDeviceManager.server.Models.Devices;
 using IoTDeviceManager.server.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace IoTDeviceManager.server.Controllers
 {
@@ -16,7 +18,8 @@ namespace IoTDeviceManager.server.Controllers
         TokenService tokenService,
         UserManager<ApplicationUser>userManager,
         IDeviceService deviceService,
-        ICosmosDbService cosmosService) : ControllerBase
+        ICosmosDbService cosmosService,
+        IAzureIoTService azureIoTService) : ControllerBase
     {
         [HttpGet, MapToApiVersion("1.0")]
         public async Task<IActionResult> GetDevicesV1()
@@ -276,6 +279,16 @@ namespace IoTDeviceManager.server.Controllers
                     Message = "Something went wrong updating the device and its sensor." +
                     "Make sure the device serial number is correct and sensor name is unique for the device."
                 });
+        }
+
+        [HttpPost("send-command/{serialNumber}"), MapToApiVersion("2.0")]
+        public async Task<IActionResult> SendCommandToDevice(string serialNumber, [FromBody]DeviceCommandRequest request)
+        {
+            var command = JsonConvert.SerializeObject(request);
+
+            await azureIoTService.SendCommandAsync(serialNumber, command);
+
+            return Ok(new { Message = "Attempted to send a command to the specified device." });
         }
     }
 }
