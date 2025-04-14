@@ -6,7 +6,7 @@ import { switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 import { DataService } from '../../services/data.service';
-import { DeviceApiResponse, CDevice } from '../../../types';
+import { DeviceApiResponse, CDevice, CommandRequest, CommandResponse, CommandType } from '../../../types';
 
 @Component({
   selector: 'app-single-device-view',
@@ -20,6 +20,15 @@ export class SingleDeviceViewComponent implements OnInit {
   errorMessage: string | null | undefined = null;
   statusCodeAndText: string | null = null;
   deviceLoading: boolean = true;
+  deviceConfig: CommandRequest = {
+    commandType: CommandType.ResetWiFi,
+    value: undefined
+  }
+  CommandType = CommandType;
+  commandOptions = [
+    { label: 'Reset WiFi', value: CommandType.ResetWiFi },
+    { label: 'Set Sensor Measurement Frequency', value: CommandType.SetFrequency }
+  ];
 
   private dataService = inject(DataService)
 
@@ -52,5 +61,26 @@ export class SingleDeviceViewComponent implements OnInit {
         }
       )
     this.deviceLoading = false;
+  }
+
+  sendCommandRequest(): void {
+    if (this.deviceConfig.commandType === CommandType.ResetWiFi) {
+      this.dataService.postConfigCommand(this.device?.serialNumber!, this.deviceConfig).subscribe(
+        (response: HttpResponse<CommandResponse>) => {
+          if (response.ok && response.body) {
+            console.log(response.body.message);
+          }
+        }
+      );
+    } else if (this.deviceConfig.value! > 0) {
+      this.dataService.postConfigCommand(this.device?.serialNumber!, this.deviceConfig).subscribe(
+        (response: HttpResponse<CommandResponse>) => {
+          if (response.ok && response.body) {
+            console.log(response.body.message);
+          }
+        }
+      );
+    }
+    this.deviceConfig.value = undefined;
   }
 }

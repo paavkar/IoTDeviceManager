@@ -66,3 +66,17 @@ export interface DevicesApiResponse {
     message: string;
     devices: CDevice[];
 }
+
+export enum CommandType {
+    ResetWiFi = 0,
+    SetFrequency
+}
+
+export interface CommandRequest {
+    commandType: CommandType;
+    value?: number;
+}
+
+export interface CommandResponse {
+    message: string;
+}
