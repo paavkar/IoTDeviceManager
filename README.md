@@ -9,10 +9,30 @@ basic info about the device and its sensors.
 ## Running the project locally
 
 Docker is the most obvious requirement for this project. Docker is used with Docker Compose to
-orchestrate the different containers. The containers include .NET Web API, MSSQL Server, React
+orchestrate the different containers. The containers include .NET Web API, MSSQL Server, Azure
+Cosmos DB, React
 frontend (with Nginx), Angular frontend (with Nginx) and a separate Nginx container for proxy.
 Once you have cloned the project, the .NET Web API and Docker require some environment variables.
 The application is developed with VS (and VS Code) on Windows.
+
+The Azure Cosmos DB (on Azure) is required to be created as such:
+
+Database name: `iot-device-manager`
+
+Container name: `devices`
+
+Partition key path: `/partitionKey`
+
+The Azure Function needs the follwing variables for connection:
+
+```
+CosmosDb:<COSMOS_DB_DATABASE_NAME>
+EventHubName:<IOT_HUB_EVENT_HUB_COMPATIBLE_NAME>
+IoTHubConnection:<IOT_HUB_EVENT_HUB_COMPATIBLE_ENDPOINT>
+```
+
+For the system to work, you need to create the Azure IoT Hub on Azure first and
+then take the required variables from there.
 
 ### Cloning the project
 
@@ -28,6 +48,7 @@ Docker needs a .env file in the project root with at least the following key-val
 DB_CONNECTION_DEV=<INSERT_YOUR_DEV_DB_CONNECTION_STRING>
 DB_CONNECTION=<INSERT_YOUR_DB_CONNECTION_STRING>
 DatabasePassword=<INSERT_YOUR_DB_PASSWORD>
+COSMOS_DB_CONNECTION_STRING=<YOUR_CONNECTION_STRING_FROM_AZURE>
 ```
 DB_CONNECTION is used in the file docker-compose.prod.yml, if you so choose (NOTE! There
 are no actual production containers or container registries for this project currently.)
