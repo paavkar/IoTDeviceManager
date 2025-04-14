@@ -5,7 +5,7 @@
 <div *ngIf="device" class="m-4">
     <span class="text-[2em]">{{ device.name }}</span>
 
-    <div class="mt-4 max-w-lg">
+    <div class="mt-4 grid gap-4 grid-cols-1 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6">
         <p-card header="Device details">
             <div class="flex flex-col gap-4">
                 <span>Online status: 
@@ -15,6 +15,28 @@
                 <span>Last connected: {{ device.lastConnectionTime | date:'medium' }}</span>
             </div>
         </p-card>
+        <div class="flex flex-col gap-4">
+            <span class="text-[1.17em]">Send commands to device</span>
+            <div *ngFor="let option of commandOptions" class="p-field-radiobutton flex">
+                <p-radioButton
+                  name="command"
+                  [value]="option.value"
+                  [(ngModel)]="deviceConfig.commandType">
+                </p-radioButton>
+                <label class="ml-2">{{ option.label }}</label>            
+            </div>
+
+            <div *ngIf="deviceConfig.commandType === CommandType.SetFrequency" class="p-field flex flex-col gap-2">
+                <label for="frequencyValue">Frequency Value:</label>
+                <p-inputnumber 
+                  id="frequencyValue"
+                  [min]="1"
+                  placeholder="Enter the measurement frequency in minutes"
+                  [(ngModel)]="deviceConfig.value"
+                  class="max-w-[3em]" />
+            </div>
+            <p-button class="rounded-md p-2" label="Send command" [outlined]="true" severity="primary" (click)="sendCommandRequest()" />
+        </div>
     </div>
 
     <div class="flex flex-col gap-4 mt-4">

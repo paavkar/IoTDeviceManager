@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CDevice, DevicesApiResponse, DeviceApiResponse, User } from '../../types';
+import { CDevice, DevicesApiResponse, DeviceApiResponse, User, CommandRequest, CommandResponse } from '../../types';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
@@ -37,5 +37,9 @@ export class DataService {
 
   postDevice(device: CDevice): Observable<CDevice> {
     return this.http.post<CDevice>(`${this.devicesEndpoint}/create`, device, { withCredentials: true });
+  }
+  
+  postConfigCommand(serialNumber: string, command: CommandRequest): Observable<HttpResponse<CommandResponse>> {
+    return this.http.post<CommandResponse>(`${this.devicesEndpoint}/send-command/${serialNumber}`, command, { withCredentials: true, observe: 'response' });
   }
 }
